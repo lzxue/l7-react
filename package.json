@@ -4,7 +4,7 @@
   "description": "",
   "author": "",
   "license": "MIT",
-  "repository": "/l7-react",
+  "repository": "https://github.com/lzxue/l7-react.git",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
