@@ -21,7 +21,7 @@ export default class App extends Component {
       })
     })
   }
-  layerClickHander(e) {
+  layerClickHander=(e) => {
     this.setState({ feature: e.feature })
   }
   renderHighlightlayer() {
@@ -61,27 +61,31 @@ export default class App extends Component {
         <AMapProvider token={'15cd8a57710d40c9b7c0e3cc120f1200'} version={'1.4.15'} plugin={'Map3D'} >
           <Scene mapView={
             {
-              zoom: 5
+              zoom: 5,
+              mapStyle: 'blank'
+
             }
           }>
             <Polygon source={{
               data: data
             }}
-            // eslint-disable-next-line react/jsx-indent-props
-            color={{
+            // eslint-disable-next-line indent
+              color={{
               field: 'name',
               value: ['#9e0142', '#d53e4f', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#e6f598', '#abdda4', '#66c2a5', '#3288bd', '#5e4fa2']
-              }}
-            shape={{
-                field: 'fill'
-              }}
+            }}
+            // eslint-disable-next-line indent
+              shape={{
+              field: 'fill'
+            }}
+            // eslint-disable-next-line indent
               style={{
-                opacity: 0.8
+              opacity: 0.8
             }}
             >
               <LayerEvent
                 type={'click'}
-                onChange = { this.layerClickHander.bind(this)}
+                onChange={this.layerClickHander}
               />
             </Polygon>
             <Line
@@ -89,7 +93,7 @@ export default class App extends Component {
                 data: data
               }}
               color={{
-                field: '#fff'
+                field: '#111'
               }}
               size={{
                 field: 2
