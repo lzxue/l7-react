@@ -1,6 +1,5 @@
 import BaseLayer from './baseLayer'
 export default class Point extends BaseLayer {
- 
   static defaultProps = {
     cfg: {
       visible: true
@@ -30,8 +29,8 @@ export default class Point extends BaseLayer {
   }
 
   initLayer() {
-    const { scene } = this.context;
-    if (this.layer) scene.removeLayer(this.layer);
-    this.layer = scene.PointLayer();
+    const { scene } = this.context
+    if (this.layer) scene.removeLayer(this.layer)
+    this.layer = scene.PointLayer()
   }
 }

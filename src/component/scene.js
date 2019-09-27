@@ -1,4 +1,3 @@
-import APILoader from '../util/APILoader'
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import L7 from '@antv/l7'
@@ -10,7 +9,6 @@ class Scene extends Component {
     scene: null
   }
   static MapViewOption = {
-
     center: PropTypes.array,
     zoom: PropTypes.number,
     mapStyle: PropTypes.string,
@@ -19,11 +17,9 @@ class Scene extends Component {
 
   }
   static propTypes = {
+    children: PropTypes.array,
     loading: PropTypes.bool,
     mapView: PropTypes.object
-    // zoomControl: PropTypes.bool,
-    // scaleControl: PropTypes.bool,
-    // attributionControl: PropTypes.bool,
   };
   static childContextTypes = {
     scene: PropTypes.object
@@ -42,7 +38,7 @@ class Scene extends Component {
       position: 'bottomright'
     }
   }
-  componentDidMount(){
+  componentDidMount() {
     this.createInstance()
   }
   getChildContext = () => ({
@@ -50,7 +46,7 @@ class Scene extends Component {
   })
 
   createInstance() {
-    console.log(L7.version)
+    console.log('L7 version', L7.version)
     const { mapView } = this.props
     this.scene = new L7.Scene({
       id: 'map',
@@ -113,8 +109,8 @@ class Scene extends Component {
     const controls = ['zoomControl', 'scaleControl', 'attributionControl']
     controls.forEach(control => {
       const isShow = nextProps[control]
-      if (!isShow && scene.get(control) && scene.get(control).isShow) { // 存在 不可见
-
+      if (!isShow && scene.get(control) && scene.get(control).isShow) { 
+        // 存在 不可见
         scene.get(control).hide()
       }
       if (isShow && scene.get(control) && !scene.get(control).isShow) {

@@ -11,11 +11,13 @@ export default class BaseLayer extends Component {
     scene: PropTypes.object
   }
   static propTypes = {
+    children: PropTypes.object,
     source: PropTypes.object,
     color: PropTypes.object,
     size: PropTypes.object,
     shape: PropTypes.object,
-    style: PropTypes.object
+    style: PropTypes.object,
+    filter: PropTypes.object
   };
   static childContextTypes = {
     layer: PropTypes.object
@@ -45,11 +47,11 @@ export default class BaseLayer extends Component {
     this.addLayer()
     // this.addHightLayer()
   }
-  initLayer() {
-    const { scene } = this.context;
-    if (this.layer) scene.removeLayer(this.layer);
-    this.layer = scene.PolygonLayer();
 
+  initLayer() {
+    const { scene } = this.context
+    if (this.layer) scene.removeLayer(this.layer)
+    this.layer = scene.PolygonLayer()
   }
 
   addLayer() {
@@ -57,7 +59,7 @@ export default class BaseLayer extends Component {
     if (!source.data) {
       return
     }
-    const layer = this.layer 
+    const layer = this.layer
     layer.source(source.data, {
       parser: source.parser,
       transforms: source.transforms
@@ -65,15 +67,15 @@ export default class BaseLayer extends Component {
     filter && layer.filter(filter.field, filter.value)
     color && layer.color(color.field, color.value)
     size.field && layer.size(size.field, size.value)
-    shape && layer.shape(shape.field,shape.value)
+    shape && layer.shape(shape.field, shape.value)
     style && layer.style(style)
     this.layer.render()
-    
     this.setState({layer: this.layer})
   }
+
   UNSAFE_componentWillReceiveProps(nextProps) {
     if (!this.layer) return null
-    const { source, size, color, shape, style,filter } = this.props
+    const { source, size, color, shape, style, filter } = this.props
     const nextSource = nextProps.source
     const nextSize = nextProps.size
     const nextColor = nextProps.color

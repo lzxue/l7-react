@@ -21,9 +21,9 @@ export default class Polygon extends BaseLayer {
     }
   }
   initLayer() {
-    const { scene } = this.context;
-    if (this.layer) scene.removeLayer(this.layer);
-    this.layer = scene.PolygonLayer();
+    const { scene } = this.context
+    if (this.layer) scene.removeLayer(this.layer)
+    this.layer = scene.PolygonLayer()
   }
   render() {
     return <div>

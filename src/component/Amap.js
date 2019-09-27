@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import loadScript from '../util/loadScript'
 class AMapProvider extends React.PureComponent {
   static propTypes = {
+    children: PropTypes.object,
     token: PropTypes.string,
     plugin: PropTypes.string,
     version: PropTypes.string
@@ -10,7 +11,7 @@ class AMapProvider extends React.PureComponent {
 
   static defaultProps = {
     plugin: 'Map3D',
-    version: '1.4.15',
+    version: '1.4.15'
   }
 
   static childContextTypes = {
@@ -25,21 +26,19 @@ class AMapProvider extends React.PureComponent {
     AMap: this.state.AMap
   })
 
-  componentDidMount () {
+  componentDidMount() {
     this.loadAMap().then(() => {
-      this.setState({loaded:true})
+      this.setState({ loaded: true })
     }).catch((err) => {
       throw err
     })
   }
-
-
-  loadAMap () {
-    let { token, version, plugin} = this.props
+  loadAMap() {
+    let { token, version, plugin } = this.props
     return loadScript(`https://webapi.amap.com/maps?v=${version}&key=${token}&plugin=${plugin}`)
   }
 
-  render () {
+  render() {
     return this.state.loaded ? this.props.children : null
   }
 }
