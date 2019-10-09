@@ -1,13 +1,27 @@
+
 import React, { Component } from 'react'
 import * as d3 from 'd3-fetch'
-import { AMapProvider, Scene, Polygon, Line, Point, LayerEvent } from 'l7-react'
-
+import { AMapProvider,
+  Scene,
+  Polygon,
+  Line, Point,
+  LayerEvent,
+  Control,
+  CustomControl,
+  LoadImage,
+  Popup
+} from 'l7-react'
+import 'antd/dist/antd.css'
+import { Table } from 'antd'
 export default class App extends Component {
   state = {
 
   }
   componentDidMount() {
-    d3.json('https://gw.alipayobjects.com/os/basement_prod/d2e0e930-fd44-4fca-8872-c1037b0fee7b.json').then(data => {
+    Promise.all([
+      d3.json('https://gw.alipayobjects.com/os/basement_prod/d2e0e930-fd44-4fca-8872-c1037b0fee7b.json')
+    ]).then(result => {
+      const [ data ] = result
       let labelData = data.features.map((feature) => {
         return feature.properties
       })
@@ -21,8 +35,68 @@ export default class App extends Component {
       })
     })
   }
+  _renderPopup() {
+    const { popup } = this.state
+    const columns = [
+      {
+        title: '字段',
+        dataIndex: 'field'
+      },
+      {
+        title: '值',
+        dataIndex: 'value'
+      }
+    ]
+    const data = [
+      {
+        key: 0,
+        field: popup.text,
+        value: Math.random() * 10
+      }
+    ]
+    return <Popup
+      lnglat={popup.lnglat}
+    >
+      <Table showHeader={false} title={() => popup.text} columns={columns} dataSource={data} size='small' bordered={false} pagination={false} />
+
+    </Popup>
+  }
   layerClickHander=(e) => {
+    this.getChildData(e.feature.properties.code)
     this.setState({ feature: e.feature })
+  }
+  getChildData(code) {
+    d3.json(`http://datavmap-public.oss-cn-hangzhou.aliyuncs.com/areas/children/${code}.json`).then(data => {
+      this.setState({child: data})
+    })
+  }
+  addChildLayer(data) {
+    return <Polygon source={{
+      data: data
+    }}
+    // eslint-disable-next-line indent
+      color={{
+      field: 'name',
+      value: ['#9e0142', '#d53e4f', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#e6f598', '#abdda4', '#66c2a5', '#3288bd', '#5e4fa2']
+    }}
+    // eslint-disable-next-line indent
+      shape={{
+      field: 'fill'
+    }}
+    // eslint-disable-next-line indent
+      style={{
+      opacity: 0.8
+    }}
+    />
+  }
+  showPopup= (e) => {
+    const { feature, lnglat } = e
+    this.setState({
+      popup: {
+        lnglat: [lnglat.lng, lnglat.lat],
+        text: feature.properties.name
+      }
+    })
   }
   renderHighlightlayer() {
     const { data, feature } = this.state
@@ -55,17 +129,39 @@ export default class App extends Component {
     />
   }
   render() {
-    const { data, labelData } = this.state
+    const { data, labelData, child } = this.state
     return (
       <div>
         <AMapProvider token={'15cd8a57710d40c9b7c0e3cc120f1200'} version={'1.4.15'} plugin={'Map3D'} >
           <Scene mapView={
             {
               zoom: 5,
-              mapStyle: 'blank'
+              mapStyle: 'dark'
 
             }
-          }>
+          }
+          // eslint-disable-next-line indent
+            style={{
+            background: '#fff'
+          }}
+          >
+            <LoadImage option={{
+              name: 'marker',
+              url: 'https://gw.alipayobjects.com/mdn/antv_site/afts/img/A*kzTMQqS2QdUAAAAAAAAAAABkARQnAQ'
+            }} />
+            <Control option={{
+              type: 'zoom'
+            }} />
+
+            <CustomControl option={{
+              position: 'bottomright'
+            }}
+            >
+          自定义组件
+            </CustomControl>
+            {
+              this.state.popup ? this._renderPopup() : null
+            }
             <Polygon source={{
               data: data
             }}
@@ -80,9 +176,13 @@ export default class App extends Component {
             }}
             // eslint-disable-next-line indent
               style={{
-              opacity: 0.8
+              opacity: 0.5
             }}
             >
+              <LayerEvent
+                type={'click'}
+                onChange={this.showPopup}
+              />
               <LayerEvent
                 type={'click'}
                 onChange={this.layerClickHander}
@@ -125,10 +225,12 @@ export default class App extends Component {
                 value: 'text'
               }}
               style={{
-                opacity: 1.0
+                opacity: 1.0,
+                textAllowOverlap: true
               }}
             />
             {this.state.feature ? this.renderHighlightlayer() : null}
+            {this.state.child ? this.addChildLayer(child) : null}
           </Scene>
         </AMapProvider>
       </div>

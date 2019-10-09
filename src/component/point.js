@@ -1,6 +1,6 @@
 import BaseLayer from './baseLayer'
 export default class Point extends BaseLayer {
-  static defaultProps = {
+  static defaultProps = Object.assign(BaseLayer.defaultProps, {
     cfg: {
       visible: true
     },
@@ -26,7 +26,7 @@ export default class Point extends BaseLayer {
       strokeWidth: 2, // 描边宽度
       opacity: 1.0
     }
-  }
+  })
 
   initLayer() {
     const { scene } = this.context

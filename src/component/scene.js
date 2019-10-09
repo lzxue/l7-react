@@ -19,10 +19,13 @@ class Scene extends Component {
   static propTypes = {
     children: PropTypes.array,
     loading: PropTypes.bool,
-    mapView: PropTypes.object
+    mapView: PropTypes.object,
+    style: PropTypes.object,
+    className: PropTypes.string
   };
   static childContextTypes = {
-    scene: PropTypes.object
+    scene: PropTypes.object,
+    L7: PropTypes.object
   }
   static controlOption = {
     zoomControl: {
@@ -42,7 +45,8 @@ class Scene extends Component {
     this.createInstance()
   }
   getChildContext = () => ({
-    scene: this.state.scene
+    scene: this.state.scene,
+    L7: L7
   })
 
   createInstance() {
@@ -55,9 +59,19 @@ class Scene extends Component {
       pitch: 0,
       zoom: 3,
       rotation: 0,
+      attributionControl: false,
+      scaleControl: false,
+      zoomControl: false,
       ...mapView
     })
     this.scene.on('loaded', () => {
+      const { style = {} } = this.props
+      // 覆盖高德地图默认地图背景颜色
+      if (style.background) {
+        this.mapWrapper.style.background = style.background
+      }
+      console.log()
+      window.scene = this.scene
       this.setState({
         mapLoaded: true,
         scene: this.scene
@@ -109,7 +123,7 @@ class Scene extends Component {
     const controls = ['zoomControl', 'scaleControl', 'attributionControl']
     controls.forEach(control => {
       const isShow = nextProps[control]
-      if (!isShow && scene.get(control) && scene.get(control).isShow) { 
+      if (!isShow && scene.get(control) && scene.get(control).isShow) {
         // 存在 不可见
         scene.get(control).hide()
       }
@@ -125,11 +139,15 @@ class Scene extends Component {
       }
     })
   }
+  componentWillUnmount () {
+    this.scene.destroy()
+  }
   _needUpdate(preValue, nextValue, sceneValue) {
     return preValue !== nextValue && nextValue !== sceneValue
   }
 
   render() {
+    const { style = {}, className } = this.props
     return (
       <div>
         <div
@@ -138,8 +156,10 @@ class Scene extends Component {
             width: '100%',
             margin: '0',
             height: '100%',
-            position: 'absolute'
+            position: 'absolute',
+            ...style
           }}
+          className={className}
           ref={div => {
             this.mapWrapper = div
           }}

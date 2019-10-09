@@ -1,6 +1,6 @@
 import BaseLayer from './baseLayer'
 export default class PolyLine extends BaseLayer {
-  static defaultProps = {
+  static defaultProps = Object.assign(BaseLayer.defaultProps, {
     source: {
       data: null
     },
@@ -16,7 +16,7 @@ export default class PolyLine extends BaseLayer {
     style: {
       opacity: 1.0
     }
-  }
+  })
   initLayer() {
     const { scene } = this.context
     if (this.layer) scene.removeLayer(this.layer)
