@@ -37,7 +37,7 @@ export default class Popup extends Component {
   }
   componentDidMount() {
     this.el = document.createElement('div')
-    this.el.className = 'react-l7--popup'
+    this.el.className = 'react-l7-popup'
     Object.assign(this.el.style, {
       position: 'relative',
       display: 'inline-block'

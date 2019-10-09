@@ -16,8 +16,10 @@ export default class BaseLayer extends Component {
     color: PropTypes.object,
     size: PropTypes.object,
     shape: PropTypes.object,
+    active: PropTypes.any,
     style: PropTypes.object,
-    filter: PropTypes.object
+    filter: PropTypes.object,
+    options: PropTypes.object
   };
   static childContextTypes = {
     layer: PropTypes.object
@@ -35,6 +37,7 @@ export default class BaseLayer extends Component {
     shape: {
       field: 'fill'
     },
+    active: false,
     style: {
       opacity: 1.0
     }
@@ -45,17 +48,17 @@ export default class BaseLayer extends Component {
   componentDidMount() {
     this.initLayer()
     this.addLayer()
-    // this.addHightLayer()
   }
 
   initLayer() {
     const { scene } = this.context
     if (this.layer) scene.removeLayer(this.layer)
-    this.layer = scene.PolygonLayer()
+    const { options } = this.props
+    this.layer = scene.PolygonLayer(options)
   }
 
   addLayer() {
-    const { source, color, size, shape, style, filter } = this.props
+    const { source, color, size, shape, style, filter, active } = this.props
     if (!source.data) {
       return
     }
@@ -68,26 +71,46 @@ export default class BaseLayer extends Component {
     color && layer.color(color.field, color.value)
     size.field && layer.size(size.field, size.value)
     shape && layer.shape(shape.field, shape.value)
+    active instanceof Boolean && layer.acitve(active)
+    active instanceof Object && layer.acitve(active)
     style && layer.style(style)
     this.layer.render()
     this.setState({layer: this.layer})
   }
+  updateLayerOption(nextOptions, options) {
+    if (nextOptions.visible !== options.visible) {
+      nextOptions.visible ? this.layer.show() : this.layer.hide()
+    }
+    if (nextOptions.autoFit !== options.autoFit && nextOptions.autoFit === true) {
+      this.layer.fitBounds()
+    }
+    if (nextOptions.minZoom !== options.minZoom) {
+      this.layer.set('minZoom', nextOptions.minZoom)
+    }
+    if (nextOptions.maxZoom !== options.maxZoom) {
+      this.layer.set('maxZoom', nextOptions.maxZoom)
+    }
+  }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
     if (!this.layer) return null
-    const { source, size, color, shape, style, filter } = this.props
+    const { source, size, color, shape, style, filter, options } = this.props
     const nextSource = nextProps.source
     const nextSize = nextProps.size
     const nextColor = nextProps.color
     const nextStyle = nextProps.style
     const nextShape = nextProps.shape
     const nextfilter = nextProps.filter
+    const nextOptions = nextProps.options
     if (!isEqual(source, nextSource)) {
       this.layer.setData(nextSource.data)
     }
+    if (!isEqual(nextOptions, options)) {
+      this.updateLayerOption(nextOptions, options)
+    }
     !isEqual(color, nextColor) && this.layer.color(nextColor.field, nextColor.value)
     !isEqual(size, nextSize) && this.layer.size(nextSize.field, nextSize.value)
-    !isEqual(shape, nextShape) && this.layer.shape(nextShape.field,nextShape.value)
+    !isEqual(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value)
     !isEqual(style, nextStyle) && this.layer.style(nextStyle)
     !isEqual(filter, nextfilter) && this.layer.filter(nextfilter.field, nextfilter.value)
     this.layer.render()
