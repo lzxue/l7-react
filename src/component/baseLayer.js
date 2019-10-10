@@ -112,7 +112,9 @@ export default class BaseLayer extends Component {
     !isEqual(size, nextSize) && this.layer.size(nextSize.field, nextSize.value)
     !isEqual(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value)
     !isEqual(style, nextStyle) && this.layer.style(nextStyle)
-    !isEqual(filter, nextfilter) && this.layer.filter(nextfilter.field, nextfilter.value)
+    if (!this.propsEqual(filter, nextfilter)) {
+      this.layer.filter(nextfilter.field, nextfilter.value)
+    }
     this.layer.render()
   }
 
@@ -128,7 +130,18 @@ export default class BaseLayer extends Component {
       return child
     })
   }
-
+  propsEqual(pre, next) {
+    if (!pre || !next) {
+      return isEqual(pre, next)
+    }
+    if (!pre.value || !pre.value) {
+      return isEqual(pre, next)
+    }
+    if (isEqual(pre.value.toString(), next.value.toString()) && isEqual(pre.id, next.id)) {
+      return true
+    }
+    return false
+  }
   render() {
     return <div>
       { this.state.layer ? this.renderChildren() : null}

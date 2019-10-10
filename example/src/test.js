@@ -111,7 +111,7 @@ export default class App extends Component {
         field: 2
       }}
       filter={{
-        id: feature.properties.name,
+        id: feature.name,
         field: 'name',
         value: (name) => {
           return feature.properties.name === name
@@ -177,7 +177,7 @@ export default class App extends Component {
             }}
             >
               <LayerEvent
-                type={'mousemove'}
+                type={'click'}
                 onChange={this.showPopup}
               />
               <LayerEvent

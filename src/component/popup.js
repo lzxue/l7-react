@@ -18,8 +18,9 @@ export default class Popup extends Component {
     children: PropTypes.element
   }
   addPopup(props) {
-    const { option, lnglat, html, text } = props
+    const { option = {}, lnglat, html, text } = props
     this.popup = new L7.Popup(option)
+    this.popup.addTo(this.context.scene)
     if (lnglat) {
       this.popup.setLnglat(lnglat)
     }
@@ -33,7 +34,6 @@ export default class Popup extends Component {
       this.renderChildren(props)
       this.popup.setDOMContent(this.el)
     }
-    this.popup.addTo(this.context.scene)
   }
   componentDidMount() {
     this.el = document.createElement('div')
@@ -44,25 +44,19 @@ export default class Popup extends Component {
     })
     this.addPopup(this.props)
   }
-  shouldComponentUpdate (nextProps, nextState) {
-    return (
-      !isEqual(this.props, nextProps) ||
-      !isEqual(this.state, nextState)
-    )
-  }
+
   UNSAFE_componentWillReceiveProps(nextProps) {
     if (
-      !isEqual(this.props, nextProps) ||
+      !isEqual(this.props.lnglat, nextProps.lnglat) ||
       !isEqual(this.props.html, nextProps.html) ||
       !isEqual(this.props.text, nextProps.text) ||
       !isEqual(this.props.onClose, nextProps.onClose)
     ) {
       this.removePopup()
       this.addPopup(nextProps)
-      return
     }
 
-    // Otherwise update the current popup.
+    // // Otherwise update the current popup.
     if (!isEqual(this.props.lnglat, nextProps.lnglat)) {
       this.popup.setLnglat(nextProps.lnglat)
     }
