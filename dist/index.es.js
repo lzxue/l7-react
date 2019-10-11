@@ -29605,7 +29605,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-var version = "1.3.7-beta.2";
+var version = "1.3.8";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -53722,7 +53722,7 @@ return exported;
 return L7;
 
 }));
-
+//# sourceMappingURL=L7.js.map
 });
 
 var L7$1 = unwrapExports(L7);
@@ -54114,7 +54114,7 @@ keysShim$1.shim = function shimObjectKeys() {
 	return Object.keys || keysShim$1;
 };
 
-var objectKeys = keysShim$1;
+var _objectKeys_1_1_1_objectKeys = keysShim$1;
 
 var hasToStringTag = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 var toStr$2 = Object.prototype.toString;
@@ -54144,7 +54144,7 @@ var supportsStandardArguments = (function () {
 
 isStandardArguments.isLegacyArguments = isLegacyArguments; // for tests
 
-var isArguments$1 = supportsStandardArguments ? isStandardArguments : isLegacyArguments;
+var _isArguments_1_0_4_isArguments = supportsStandardArguments ? isStandardArguments : isLegacyArguments;
 
 /* https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.is */
 
@@ -54152,7 +54152,7 @@ var NumberIsNaN = function (value) {
 	return value !== value;
 };
 
-var objectIs = function is(a, b) {
+var _objectIs_1_0_1_objectIs = function is(a, b) {
 	if (a === 0 && b === 0) {
 		return 1 / a === 1 / b;
 	} else if (a === b) {
@@ -54214,9 +54214,9 @@ var implementation$1 = function bind(that) {
     return bound;
 };
 
-var functionBind = Function.prototype.bind || implementation$1;
+var _functionBind_1_1_1_functionBind = Function.prototype.bind || implementation$1;
 
-var src = functionBind.call(Function.call, Object.prototype.hasOwnProperty);
+var src = _functionBind_1_1_1_functionBind.call(Function.call, Object.prototype.hasOwnProperty);
 
 var regexExec = RegExp.prototype.exec;
 var gOPD = Object.getOwnPropertyDescriptor;
@@ -54238,7 +54238,7 @@ var toStr$4 = Object.prototype.toString;
 var regexClass = '[object RegExp]';
 var hasToStringTag$1 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 
-var isRegex = function isRegex(value) {
+var _isRegex_1_0_4_isRegex = function isRegex(value) {
 	if (!value || typeof value !== 'object') {
 		return false;
 	}
@@ -54298,7 +54298,7 @@ var defineProperty$1 = function (object, name, value, predicate) {
 
 var defineProperties = function (object, map) {
 	var predicates = arguments.length > 2 ? arguments[2] : {};
-	var props = objectKeys(map);
+	var props = _objectKeys_1_1_1_objectKeys(map);
 	if (hasSymbols) {
 		props = concat.call(props, Object.getOwnPropertySymbols(map));
 	}
@@ -54309,7 +54309,7 @@ var defineProperties = function (object, map) {
 
 defineProperties.supportsDescriptors = !!supportsDescriptors;
 
-var defineProperties_1 = defineProperties;
+var _defineProperties_1_1_3_defineProperties = defineProperties;
 
 var toObject = Object;
 var TypeErr = TypeError;
@@ -54340,7 +54340,7 @@ var implementation$2 = function flags() {
 	return result;
 };
 
-var supportsDescriptors$1 = defineProperties_1.supportsDescriptors;
+var supportsDescriptors$1 = _defineProperties_1_1_3_defineProperties.supportsDescriptors;
 var gOPD$1 = Object.getOwnPropertyDescriptor;
 var TypeErr$1 = TypeError;
 
@@ -54357,7 +54357,7 @@ var polyfill = function getPolyfill() {
 	return implementation$2;
 };
 
-var supportsDescriptors$2 = defineProperties_1.supportsDescriptors;
+var supportsDescriptors$2 = _defineProperties_1_1_3_defineProperties.supportsDescriptors;
 
 var gOPD$2 = Object.getOwnPropertyDescriptor;
 var defineProperty$2 = Object.defineProperty;
@@ -54384,13 +54384,13 @@ var shim = function shimFlags() {
 
 var flagsBound = Function.call.bind(implementation$2);
 
-defineProperties_1(flagsBound, {
+_defineProperties_1_1_3_defineProperties(flagsBound, {
 	getPolyfill: polyfill,
 	implementation: implementation$2,
 	shim: shim
 });
 
-var regexp_prototype_flags = flagsBound;
+var _regexp_prototype_flags_1_2_0_regexp_prototype_flags = flagsBound;
 
 var getDay = Date.prototype.getDay;
 var tryDateObject = function tryDateObject(value) {
@@ -54406,7 +54406,7 @@ var toStr$6 = Object.prototype.toString;
 var dateClass = '[object Date]';
 var hasToStringTag$2 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 
-var isDateObject = function isDateObject(value) {
+var _isDateObject_1_0_1_isDateObject = function isDateObject(value) {
 	if (typeof value !== 'object' || value === null) { return false; }
 	return hasToStringTag$2 ? tryDateObject(value) : toStr$6.call(value) === dateClass;
 };
@@ -54417,13 +54417,13 @@ function deepEqual(actual, expected, options) {
   var opts = options || {};
 
   // 7.1. All identical values are equivalent, as determined by ===.
-  if (opts.strict ? objectIs(actual, expected) : actual === expected) {
+  if (opts.strict ? _objectIs_1_0_1_objectIs(actual, expected) : actual === expected) {
     return true;
   }
 
   // 7.3. Other pairs that do not both pass typeof value == 'object', equivalence is determined by ==.
   if (!actual || !expected || (typeof actual !== 'object' && typeof expected !== 'object')) {
-    return opts.strict ? objectIs(actual, expected) : actual == expected;
+    return opts.strict ? _objectIs_1_0_1_objectIs(actual, expected) : actual == expected;
   }
 
   /*
@@ -54464,16 +54464,16 @@ function objEquiv(a, b, opts) {
   // an identical 'prototype' property.
   if (a.prototype !== b.prototype) { return false; }
 
-  if (isArguments$1(a) !== isArguments$1(b)) { return false; }
+  if (_isArguments_1_0_4_isArguments(a) !== _isArguments_1_0_4_isArguments(b)) { return false; }
 
-  var aIsRegex = isRegex(a);
-  var bIsRegex = isRegex(b);
+  var aIsRegex = _isRegex_1_0_4_isRegex(a);
+  var bIsRegex = _isRegex_1_0_4_isRegex(b);
   if (aIsRegex !== bIsRegex) { return false; }
   if (aIsRegex || bIsRegex) {
-    return a.source === b.source && regexp_prototype_flags(a) === regexp_prototype_flags(b);
+    return a.source === b.source && _regexp_prototype_flags_1_2_0_regexp_prototype_flags(a) === _regexp_prototype_flags_1_2_0_regexp_prototype_flags(b);
   }
 
-  if (isDateObject(a) && isDateObject(b)) {
+  if (_isDateObject_1_0_1_isDateObject(a) && _isDateObject_1_0_1_isDateObject(b)) {
     return getTime.call(a) === getTime.call(b);
   }
 
@@ -54491,8 +54491,8 @@ function objEquiv(a, b, opts) {
   if (typeof a !== typeof b) { return false; }
 
   try {
-    var ka = objectKeys(a);
-    var kb = objectKeys(b);
+    var ka = _objectKeys_1_1_1_objectKeys(a);
+    var kb = _objectKeys_1_1_1_objectKeys(b);
   } catch (e) { // happens when one is a string literal and the other isn't
     return false;
   }
@@ -54515,7 +54515,7 @@ function objEquiv(a, b, opts) {
   return true;
 }
 
-var deepEqual_1 = deepEqual;
+var _deepEqual_1_1_0_deepEqual = deepEqual;
 
 /* eslint-disable camelcase */
 var Children$1 = React.Children;
@@ -54555,7 +54555,8 @@ var BaseLayer = function (_Component) {
       var scene = this.context.scene;
 
       if (this.layer) scene.removeLayer(this.layer);
-      var options = this.props.options;
+      var _props$options = this.props.options,
+          options = _props$options === undefined ? {} : _props$options;
 
       this.layer = scene.PolygonLayer(options);
     }
@@ -54569,7 +54570,9 @@ var BaseLayer = function (_Component) {
           shape = _props.shape,
           style = _props.style,
           filter = _props.filter,
-          active = _props.active;
+          active = _props.active,
+          _props$options2 = _props.options,
+          options = _props$options2 === undefined ? {} : _props$options2;
 
       if (!source.data) {
         return;
@@ -54587,6 +54590,9 @@ var BaseLayer = function (_Component) {
       active instanceof Object && layer.acitve(active);
       style && layer.style(style);
       this.layer.render();
+      if (options.autoFit) {
+        this.layer.fitBounds();
+      }
       this.setState({ layer: this.layer });
     }
   }, {
@@ -54625,16 +54631,16 @@ var BaseLayer = function (_Component) {
       var nextShape = nextProps.shape;
       var nextfilter = nextProps.filter;
       var nextOptions = nextProps.options;
-      if (!deepEqual_1(source, nextSource)) {
+      if (!_deepEqual_1_1_0_deepEqual(source, nextSource)) {
         this.layer.setData(nextSource.data);
       }
-      if (!deepEqual_1(nextOptions, options)) {
+      if (!_deepEqual_1_1_0_deepEqual(nextOptions, options)) {
         this.updateLayerOption(nextOptions, options);
       }
-      !deepEqual_1(color, nextColor) && this.layer.color(nextColor.field, nextColor.value);
-      !deepEqual_1(size, nextSize) && this.layer.size(nextSize.field, nextSize.value);
-      !deepEqual_1(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value);
-      !deepEqual_1(style, nextStyle) && this.layer.style(nextStyle);
+      !_deepEqual_1_1_0_deepEqual(color, nextColor) && this.layer.color(nextColor.field, nextColor.value);
+      !_deepEqual_1_1_0_deepEqual(size, nextSize) && this.layer.size(nextSize.field, nextSize.value);
+      !_deepEqual_1_1_0_deepEqual(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value);
+      !_deepEqual_1_1_0_deepEqual(style, nextStyle) && this.layer.style(nextStyle);
       if (!this.propsEqual(filter, nextfilter)) {
         this.layer.filter(nextfilter.field, nextfilter.value);
       }
@@ -54661,12 +54667,12 @@ var BaseLayer = function (_Component) {
     key: 'propsEqual',
     value: function propsEqual(pre, next) {
       if (!pre || !next) {
-        return deepEqual_1(pre, next);
+        return _deepEqual_1_1_0_deepEqual(pre, next);
       }
       if (!pre.value || !pre.value) {
-        return deepEqual_1(pre, next);
+        return _deepEqual_1_1_0_deepEqual(pre, next);
       }
-      if (deepEqual_1(pre.value.toString(), next.value.toString()) && deepEqual_1(pre.id, next.id)) {
+      if (_deepEqual_1_1_0_deepEqual(pre.value.toString(), next.value.toString()) && _deepEqual_1_1_0_deepEqual(pre.id, next.id)) {
         return true;
       }
       return false;
@@ -54736,7 +54742,10 @@ var Polygon = function (_BaseLayer) {
       var scene = this.context.scene;
 
       if (this.layer) scene.removeLayer(this.layer);
-      this.layer = scene.PolygonLayer();
+      var _props$options = this.props.options,
+          options = _props$options === undefined ? {} : _props$options;
+
+      this.layer = scene.PolygonLayer(options);
     }
   }, {
     key: 'render',
@@ -54783,7 +54792,10 @@ var PolyLine = function (_BaseLayer) {
       var scene = this.context.scene;
 
       if (this.layer) scene.removeLayer(this.layer);
-      this.layer = scene.LineLayer();
+      var _props$options = this.props.options,
+          options = _props$options === undefined ? {} : _props$options;
+
+      this.layer = scene.LineLayer(options);
     }
   }]);
   return PolyLine;
@@ -54821,7 +54833,10 @@ var Point = function (_BaseLayer) {
       var scene = this.context.scene;
 
       if (this.layer) scene.removeLayer(this.layer);
-      this.layer = scene.PointLayer();
+      var _props$options = this.props.options,
+          options = _props$options === undefined ? {} : _props$options;
+
+      this.layer = scene.PointLayer(options);
     }
   }]);
   return Point;
@@ -54854,6 +54869,575 @@ Point.defaultProps = Object.assign(BaseLayer.defaultProps, {
     opacity: 1.0
   }
 });
+
+var toStr$7 = Object.prototype.toString;
+
+var isArguments$1 = function isArguments(value) {
+	var str = toStr$7.call(value);
+	var isArgs = str === '[object Arguments]';
+	if (!isArgs) {
+		isArgs = str !== '[object Array]' &&
+			value !== null &&
+			typeof value === 'object' &&
+			typeof value.length === 'number' &&
+			value.length >= 0 &&
+			toStr$7.call(value.callee) === '[object Function]';
+	}
+	return isArgs;
+};
+
+var keysShim$2;
+if (!Object.keys) {
+	// modified from https://github.com/es-shims/es5-shim
+	var has$1 = Object.prototype.hasOwnProperty;
+	var toStr$8 = Object.prototype.toString;
+	var isArgs$1 = isArguments$1; // eslint-disable-line global-require
+	var isEnumerable$1 = Object.prototype.propertyIsEnumerable;
+	var hasDontEnumBug$1 = !isEnumerable$1.call({ toString: null }, 'toString');
+	var hasProtoEnumBug$1 = isEnumerable$1.call(function () {}, 'prototype');
+	var dontEnums$1 = [
+		'toString',
+		'toLocaleString',
+		'valueOf',
+		'hasOwnProperty',
+		'isPrototypeOf',
+		'propertyIsEnumerable',
+		'constructor'
+	];
+	var equalsConstructorPrototype$1 = function (o) {
+		var ctor = o.constructor;
+		return ctor && ctor.prototype === o;
+	};
+	var excludedKeys$1 = {
+		$applicationCache: true,
+		$console: true,
+		$external: true,
+		$frame: true,
+		$frameElement: true,
+		$frames: true,
+		$innerHeight: true,
+		$innerWidth: true,
+		$onmozfullscreenchange: true,
+		$onmozfullscreenerror: true,
+		$outerHeight: true,
+		$outerWidth: true,
+		$pageXOffset: true,
+		$pageYOffset: true,
+		$parent: true,
+		$scrollLeft: true,
+		$scrollTop: true,
+		$scrollX: true,
+		$scrollY: true,
+		$self: true,
+		$webkitIndexedDB: true,
+		$webkitStorageInfo: true,
+		$window: true
+	};
+	var hasAutomationEqualityBug$1 = (function () {
+		/* global window */
+		if (typeof window === 'undefined') { return false; }
+		for (var k in window) {
+			try {
+				if (!excludedKeys$1['$' + k] && has$1.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
+					try {
+						equalsConstructorPrototype$1(window[k]);
+					} catch (e) {
+						return true;
+					}
+				}
+			} catch (e) {
+				return true;
+			}
+		}
+		return false;
+	}());
+	var equalsConstructorPrototypeIfNotBuggy$1 = function (o) {
+		/* global window */
+		if (typeof window === 'undefined' || !hasAutomationEqualityBug$1) {
+			return equalsConstructorPrototype$1(o);
+		}
+		try {
+			return equalsConstructorPrototype$1(o);
+		} catch (e) {
+			return false;
+		}
+	};
+
+	keysShim$2 = function keys(object) {
+		var isObject = object !== null && typeof object === 'object';
+		var isFunction = toStr$8.call(object) === '[object Function]';
+		var isArguments = isArgs$1(object);
+		var isString = isObject && toStr$8.call(object) === '[object String]';
+		var theKeys = [];
+
+		if (!isObject && !isFunction && !isArguments) {
+			throw new TypeError('Object.keys called on a non-object');
+		}
+
+		var skipProto = hasProtoEnumBug$1 && isFunction;
+		if (isString && object.length > 0 && !has$1.call(object, 0)) {
+			for (var i = 0; i < object.length; ++i) {
+				theKeys.push(String(i));
+			}
+		}
+
+		if (isArguments && object.length > 0) {
+			for (var j = 0; j < object.length; ++j) {
+				theKeys.push(String(j));
+			}
+		} else {
+			for (var name in object) {
+				if (!(skipProto && name === 'prototype') && has$1.call(object, name)) {
+					theKeys.push(String(name));
+				}
+			}
+		}
+
+		if (hasDontEnumBug$1) {
+			var skipConstructor = equalsConstructorPrototypeIfNotBuggy$1(object);
+
+			for (var k = 0; k < dontEnums$1.length; ++k) {
+				if (!(skipConstructor && dontEnums$1[k] === 'constructor') && has$1.call(object, dontEnums$1[k])) {
+					theKeys.push(dontEnums$1[k]);
+				}
+			}
+		}
+		return theKeys;
+	};
+}
+var implementation$3 = keysShim$2;
+
+var slice$2 = Array.prototype.slice;
+
+
+var origKeys$1 = Object.keys;
+var keysShim$3 = origKeys$1 ? function keys(o) { return origKeys$1(o); } : implementation$3;
+
+var originalKeys$1 = Object.keys;
+
+keysShim$3.shim = function shimObjectKeys() {
+	if (Object.keys) {
+		var keysWorksWithArguments = (function () {
+			// Safari 5.0 bug
+			var args = Object.keys(arguments);
+			return args && args.length === arguments.length;
+		}(1, 2));
+		if (!keysWorksWithArguments) {
+			Object.keys = function keys(object) { // eslint-disable-line func-name-matching
+				if (isArguments$1(object)) {
+					return originalKeys$1(slice$2.call(object));
+				}
+				return originalKeys$1(object);
+			};
+		}
+	} else {
+		Object.keys = keysShim$3;
+	}
+	return Object.keys || keysShim$3;
+};
+
+var objectKeys = keysShim$3;
+
+var hasToStringTag$3 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
+var toStr$9 = Object.prototype.toString;
+
+var isStandardArguments$1 = function isArguments(value) {
+	if (hasToStringTag$3 && value && typeof value === 'object' && Symbol.toStringTag in value) {
+		return false;
+	}
+	return toStr$9.call(value) === '[object Arguments]';
+};
+
+var isLegacyArguments$1 = function isArguments(value) {
+	if (isStandardArguments$1(value)) {
+		return true;
+	}
+	return value !== null &&
+		typeof value === 'object' &&
+		typeof value.length === 'number' &&
+		value.length >= 0 &&
+		toStr$9.call(value) !== '[object Array]' &&
+		toStr$9.call(value.callee) === '[object Function]';
+};
+
+var supportsStandardArguments$1 = (function () {
+	return isStandardArguments$1(arguments);
+}());
+
+isStandardArguments$1.isLegacyArguments = isLegacyArguments$1; // for tests
+
+var isArguments$2 = supportsStandardArguments$1 ? isStandardArguments$1 : isLegacyArguments$1;
+
+/* https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.is */
+
+var NumberIsNaN$1 = function (value) {
+	return value !== value;
+};
+
+var objectIs = function is(a, b) {
+	if (a === 0 && b === 0) {
+		return 1 / a === 1 / b;
+	} else if (a === b) {
+		return true;
+	} else if (NumberIsNaN$1(a) && NumberIsNaN$1(b)) {
+		return true;
+	}
+	return false;
+};
+
+/* eslint no-invalid-this: 1 */
+
+var ERROR_MESSAGE$1 = 'Function.prototype.bind called on incompatible ';
+var slice$3 = Array.prototype.slice;
+var toStr$a = Object.prototype.toString;
+var funcType$1 = '[object Function]';
+
+var implementation$4 = function bind(that) {
+    var target = this;
+    if (typeof target !== 'function' || toStr$a.call(target) !== funcType$1) {
+        throw new TypeError(ERROR_MESSAGE$1 + target);
+    }
+    var args = slice$3.call(arguments, 1);
+
+    var bound;
+    var binder = function () {
+        if (this instanceof bound) {
+            var result = target.apply(
+                this,
+                args.concat(slice$3.call(arguments))
+            );
+            if (Object(result) === result) {
+                return result;
+            }
+            return this;
+        } else {
+            return target.apply(
+                that,
+                args.concat(slice$3.call(arguments))
+            );
+        }
+    };
+
+    var boundLength = Math.max(0, target.length - args.length);
+    var boundArgs = [];
+    for (var i = 0; i < boundLength; i++) {
+        boundArgs.push('$' + i);
+    }
+
+    bound = Function('binder', 'return function (' + boundArgs.join(',') + '){ return binder.apply(this,arguments); }')(binder);
+
+    if (target.prototype) {
+        var Empty = function Empty() {};
+        Empty.prototype = target.prototype;
+        bound.prototype = new Empty();
+        Empty.prototype = null;
+    }
+
+    return bound;
+};
+
+var functionBind = Function.prototype.bind || implementation$4;
+
+var src$1 = functionBind.call(Function.call, Object.prototype.hasOwnProperty);
+
+var regexExec$1 = RegExp.prototype.exec;
+var gOPD$3 = Object.getOwnPropertyDescriptor;
+
+var tryRegexExecCall$1 = function tryRegexExec(value) {
+	try {
+		var lastIndex = value.lastIndex;
+		value.lastIndex = 0;
+
+		regexExec$1.call(value);
+		return true;
+	} catch (e) {
+		return false;
+	} finally {
+		value.lastIndex = lastIndex;
+	}
+};
+var toStr$b = Object.prototype.toString;
+var regexClass$1 = '[object RegExp]';
+var hasToStringTag$4 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
+
+var isRegex = function isRegex(value) {
+	if (!value || typeof value !== 'object') {
+		return false;
+	}
+	if (!hasToStringTag$4) {
+		return toStr$b.call(value) === regexClass$1;
+	}
+
+	var descriptor = gOPD$3(value, 'lastIndex');
+	var hasLastIndexDataProperty = descriptor && src$1(descriptor, 'value');
+	if (!hasLastIndexDataProperty) {
+		return false;
+	}
+
+	return tryRegexExecCall$1(value);
+};
+
+var hasSymbols$1 = typeof Symbol === 'function' && typeof Symbol('foo') === 'symbol';
+
+var toStr$c = Object.prototype.toString;
+var concat$1 = Array.prototype.concat;
+var origDefineProperty$1 = Object.defineProperty;
+
+var isFunction$1 = function (fn) {
+	return typeof fn === 'function' && toStr$c.call(fn) === '[object Function]';
+};
+
+var arePropertyDescriptorsSupported$1 = function () {
+	var obj = {};
+	try {
+		origDefineProperty$1(obj, 'x', { enumerable: false, value: obj });
+		// eslint-disable-next-line no-unused-vars, no-restricted-syntax
+		for (var _ in obj) { // jscs:ignore disallowUnusedVariables
+			return false;
+		}
+		return obj.x === obj;
+	} catch (e) { /* this is IE 8. */
+		return false;
+	}
+};
+var supportsDescriptors$3 = origDefineProperty$1 && arePropertyDescriptorsSupported$1();
+
+var defineProperty$3 = function (object, name, value, predicate) {
+	if (name in object && (!isFunction$1(predicate) || !predicate())) {
+		return;
+	}
+	if (supportsDescriptors$3) {
+		origDefineProperty$1(object, name, {
+			configurable: true,
+			enumerable: false,
+			value: value,
+			writable: true
+		});
+	} else {
+		object[name] = value;
+	}
+};
+
+var defineProperties$1 = function (object, map) {
+	var predicates = arguments.length > 2 ? arguments[2] : {};
+	var props = objectKeys(map);
+	if (hasSymbols$1) {
+		props = concat$1.call(props, Object.getOwnPropertySymbols(map));
+	}
+	for (var i = 0; i < props.length; i += 1) {
+		defineProperty$3(object, props[i], map[props[i]], predicates[props[i]]);
+	}
+};
+
+defineProperties$1.supportsDescriptors = !!supportsDescriptors$3;
+
+var defineProperties_1 = defineProperties$1;
+
+var toObject$1 = Object;
+var TypeErr$3 = TypeError;
+
+var implementation$5 = function flags() {
+	if (this != null && this !== toObject$1(this)) {
+		throw new TypeErr$3('RegExp.prototype.flags getter called on non-object');
+	}
+	var result = '';
+	if (this.global) {
+		result += 'g';
+	}
+	if (this.ignoreCase) {
+		result += 'i';
+	}
+	if (this.multiline) {
+		result += 'm';
+	}
+	if (this.dotAll) {
+		result += 's';
+	}
+	if (this.unicode) {
+		result += 'u';
+	}
+	if (this.sticky) {
+		result += 'y';
+	}
+	return result;
+};
+
+var supportsDescriptors$4 = defineProperties_1.supportsDescriptors;
+var gOPD$4 = Object.getOwnPropertyDescriptor;
+var TypeErr$4 = TypeError;
+
+var polyfill$1 = function getPolyfill() {
+	if (!supportsDescriptors$4) {
+		throw new TypeErr$4('RegExp.prototype.flags requires a true ES5 environment that supports property descriptors');
+	}
+	if (/a/mig.flags === 'gim') {
+		var descriptor = gOPD$4(RegExp.prototype, 'flags');
+		if (descriptor && typeof descriptor.get === 'function' && typeof (/a/).dotAll === 'boolean') {
+			return descriptor.get;
+		}
+	}
+	return implementation$5;
+};
+
+var supportsDescriptors$5 = defineProperties_1.supportsDescriptors;
+
+var gOPD$5 = Object.getOwnPropertyDescriptor;
+var defineProperty$4 = Object.defineProperty;
+var TypeErr$5 = TypeError;
+var getProto$1 = Object.getPrototypeOf;
+var regex$1 = /a/;
+
+var shim$1 = function shimFlags() {
+	if (!supportsDescriptors$5 || !getProto$1) {
+		throw new TypeErr$5('RegExp.prototype.flags requires a true ES5 environment that supports property descriptors');
+	}
+	var polyfill = polyfill$1();
+	var proto = getProto$1(regex$1);
+	var descriptor = gOPD$5(proto, 'flags');
+	if (!descriptor || descriptor.get !== polyfill) {
+		defineProperty$4(proto, 'flags', {
+			configurable: true,
+			enumerable: false,
+			get: polyfill
+		});
+	}
+	return polyfill;
+};
+
+var flagsBound$1 = Function.call.bind(implementation$5);
+
+defineProperties_1(flagsBound$1, {
+	getPolyfill: polyfill$1,
+	implementation: implementation$5,
+	shim: shim$1
+});
+
+var regexp_prototype_flags = flagsBound$1;
+
+var getDay$1 = Date.prototype.getDay;
+var tryDateObject$1 = function tryDateObject(value) {
+	try {
+		getDay$1.call(value);
+		return true;
+	} catch (e) {
+		return false;
+	}
+};
+
+var toStr$d = Object.prototype.toString;
+var dateClass$1 = '[object Date]';
+var hasToStringTag$5 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
+
+var isDateObject = function isDateObject(value) {
+	if (typeof value !== 'object' || value === null) { return false; }
+	return hasToStringTag$5 ? tryDateObject$1(value) : toStr$d.call(value) === dateClass$1;
+};
+
+var getTime$1 = Date.prototype.getTime;
+
+function deepEqual$1(actual, expected, options) {
+  var opts = options || {};
+
+  // 7.1. All identical values are equivalent, as determined by ===.
+  if (opts.strict ? objectIs(actual, expected) : actual === expected) {
+    return true;
+  }
+
+  // 7.3. Other pairs that do not both pass typeof value == 'object', equivalence is determined by ==.
+  if (!actual || !expected || (typeof actual !== 'object' && typeof expected !== 'object')) {
+    return opts.strict ? objectIs(actual, expected) : actual == expected;
+  }
+
+  /*
+   * 7.4. For all other Object pairs, including Array objects, equivalence is
+   * determined by having the same number of owned properties (as verified
+   * with Object.prototype.hasOwnProperty.call), the same set of keys
+   * (although not necessarily the same order), equivalent values for every
+   * corresponding key, and an identical 'prototype' property. Note: this
+   * accounts for both named and indexed properties on Arrays.
+   */
+  // eslint-disable-next-line no-use-before-define
+  return objEquiv$1(actual, expected, opts);
+}
+
+function isUndefinedOrNull$1(value) {
+  return value === null || value === undefined;
+}
+
+function isBuffer$1(x) {
+  if (!x || typeof x !== 'object' || typeof x.length !== 'number') {
+    return false;
+  }
+  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
+    return false;
+  }
+  if (x.length > 0 && typeof x[0] !== 'number') {
+    return false;
+  }
+  return true;
+}
+
+function objEquiv$1(a, b, opts) {
+  /* eslint max-statements: [2, 50] */
+  var i, key;
+  if (typeof a !== typeof b) { return false; }
+  if (isUndefinedOrNull$1(a) || isUndefinedOrNull$1(b)) { return false; }
+
+  // an identical 'prototype' property.
+  if (a.prototype !== b.prototype) { return false; }
+
+  if (isArguments$2(a) !== isArguments$2(b)) { return false; }
+
+  var aIsRegex = isRegex(a);
+  var bIsRegex = isRegex(b);
+  if (aIsRegex !== bIsRegex) { return false; }
+  if (aIsRegex || bIsRegex) {
+    return a.source === b.source && regexp_prototype_flags(a) === regexp_prototype_flags(b);
+  }
+
+  if (isDateObject(a) && isDateObject(b)) {
+    return getTime$1.call(a) === getTime$1.call(b);
+  }
+
+  var aIsBuffer = isBuffer$1(a);
+  var bIsBuffer = isBuffer$1(b);
+  if (aIsBuffer !== bIsBuffer) { return false; }
+  if (aIsBuffer || bIsBuffer) { // && would work too, because both are true or both false here
+    if (a.length !== b.length) { return false; }
+    for (i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) { return false; }
+    }
+    return true;
+  }
+
+  if (typeof a !== typeof b) { return false; }
+
+  try {
+    var ka = objectKeys(a);
+    var kb = objectKeys(b);
+  } catch (e) { // happens when one is a string literal and the other isn't
+    return false;
+  }
+  // having the same number of owned properties (keys incorporates hasOwnProperty)
+  if (ka.length !== kb.length) { return false; }
+
+  // the same set of keys (although not necessarily the same order),
+  ka.sort();
+  kb.sort();
+  // ~~~cheap key test
+  for (i = ka.length - 1; i >= 0; i--) {
+    if (ka[i] != kb[i]) { return false; }
+  }
+  // equivalent values for every corresponding key, and ~~~possibly expensive deep test
+  for (i = ka.length - 1; i >= 0; i--) {
+    key = ka[i];
+    if (!deepEqual$1(a[key], b[key], opts)) { return false; }
+  }
+
+  return true;
+}
+
+var deepEqual_1 = deepEqual$1;
 
 /* eslint-disable camelcase */
 

@@ -135,7 +135,7 @@ export default class App extends Component {
         <AMapProvider token={'15cd8a57710d40c9b7c0e3cc120f1200'} version={'1.4.15'} plugin={'Map3D'} >
           <Scene mapView={
             {
-              zoom: 5,
+              zoom: 10,
               mapStyle: 'dark'
 
             }
@@ -161,6 +161,13 @@ export default class App extends Component {
             }
             <Polygon source={{
               data: data
+            }}
+            // eslint-disable-next-line indent
+              options={{
+              autoFit: true,
+              visible: true,
+              minZoom: 2,
+              maxZoom: 10
             }}
             // eslint-disable-next-line indent
               color={{

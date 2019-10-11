@@ -20,6 +20,7 @@ export default class PolyLine extends BaseLayer {
   initLayer() {
     const { scene } = this.context
     if (this.layer) scene.removeLayer(this.layer)
-    this.layer = scene.LineLayer()
+    const { options = {} } = this.props
+    this.layer = scene.LineLayer(options)
   }
 }

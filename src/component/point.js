@@ -31,6 +31,7 @@ export default class Point extends BaseLayer {
   initLayer() {
     const { scene } = this.context
     if (this.layer) scene.removeLayer(this.layer)
-    this.layer = scene.PointLayer()
+    const { options = {} } = this.props
+    this.layer = scene.PointLayer(options)
   }
 }

@@ -53,12 +53,12 @@ export default class BaseLayer extends Component {
   initLayer() {
     const { scene } = this.context
     if (this.layer) scene.removeLayer(this.layer)
-    const { options } = this.props
+    const { options = {} } = this.props
     this.layer = scene.PolygonLayer(options)
   }
 
   addLayer() {
-    const { source, color, size, shape, style, filter, active } = this.props
+    const { source, color, size, shape, style, filter, active, options = {} } = this.props
     if (!source.data) {
       return
     }
@@ -75,6 +75,9 @@ export default class BaseLayer extends Component {
     active instanceof Object && layer.acitve(active)
     style && layer.style(style)
     this.layer.render()
+    if (options.autoFit) {
+      this.layer.fitBounds()
+    }
     this.setState({layer: this.layer})
   }
   updateLayerOption(nextOptions, options) {
