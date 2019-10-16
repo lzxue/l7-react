@@ -75,6 +75,10 @@ export default class App extends Component {
       data: data
     }}
     // eslint-disable-next-line indent
+      options={{
+      zIndex: 1000
+    }}
+    // eslint-disable-next-line indent
       color={{
       field: 'name',
       value: ['#9e0142', '#d53e4f', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#e6f598', '#abdda4', '#66c2a5', '#3288bd', '#5e4fa2']
@@ -142,20 +146,6 @@ export default class App extends Component {
           }
           // eslint-disable-next-line indent
           >
-            <LoadImage option={{
-              name: 'marker',
-              url: 'https://gw.alipayobjects.com/mdn/antv_site/afts/img/A*kzTMQqS2QdUAAAAAAAAAAABkARQnAQ'
-            }} />
-            <Control option={{
-              type: 'zoom'
-            }} />
-
-            <CustomControl option={{
-              position: 'bottomright'
-            }}
-            >
-          自定义组件
-            </CustomControl>
             {
               this.state.popup ? this._renderPopup() : null
             }
@@ -167,7 +157,8 @@ export default class App extends Component {
               autoFit: true,
               visible: true,
               minZoom: 2,
-              maxZoom: 10
+              maxZoom: 10,
+              zIndex: 0
             }}
             // eslint-disable-next-line indent
               color={{
@@ -183,10 +174,10 @@ export default class App extends Component {
               opacity: 0.5
             }}
             >
-              <LayerEvent
-                type={'mousemove'}
-                onChange={this.showPopup}
-              />
+            <LayerEvent
+            type={'mousemove'}
+            onChange={this.showPopup}
+           />
               <LayerEvent
                 type={'click'}
                 onChange={this.layerClickHander}
@@ -209,6 +200,30 @@ export default class App extends Component {
                 opacity: 1.0
               }}
             />
+
+            <Point
+              source={{
+                data: labelData,
+                parser: {
+                  type: 'json',
+                  coordinates: 'center'
+                }
+              }}
+              color={{
+                field: '#ff0'
+              }}
+              size={{
+                field: 14
+              }}
+              shape={{
+                field: 'triangle'
+
+              }}
+              style={{
+                opacity: 0.8,
+                textAnchor: 'top'
+              }}
+            />
             <Point
               source={{
                 data: labelData,
@@ -225,20 +240,20 @@ export default class App extends Component {
                 field: 14
               }}
               shape={{
-                field: 'circle'
-              }}
-              filter={{
                 field: 'name',
-                value: (name) => false
+                value: 'text'
 
               }}
               style={{
                 opacity: 1.0,
-                textAllowOverlap: true
+                textAllowOverlap: true,
+                textAnchor: 'top',
+                textOffset: [0, 40]
               }}
             />
-            {this.state.feature ? this.renderHighlightlayer() : null}
-            {this.state.child ? this.addChildLayer(child) : null}
+            {/* this.state.feature ? this.renderHighlightlayer() : null */}
+            { /* this.state.child ? this.addChildLayer(child) : null */}
+
           </Scene>
         </AMapProvider>
       </div>

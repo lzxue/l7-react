@@ -29605,7 +29605,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-var version = "1.3.8";
+var version = "1.3.9";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -29670,7 +29670,7 @@ var devDependencies = {
 };
 var scripts = {
 	"build-dev": "rollup -c --environment BUILD:dev",
-	"watch-dev": "rollup -c --environment BUILD:dev --watch & npm run demos-web ",
+	"watch-dev": "rollup -c --environment BUILD:dev,MINIFY:false --watch & npm run demos-web ",
 	"build-prod": "rollup -c --environment BUILD:production,MINIFY:false",
 	"build-prod-min": "rollup -c --environment BUILD:production,MINIFY:true",
 	build: "rollup -c --environment BUILD:production",
@@ -39454,6 +39454,7 @@ function fillPolygon(points) {
   };
 }
 
+// 绘制3d
 function extrude_Polygon(points) {
   var p1 = points[0][0];
   var p2 = points[0][points[0].length - 1];
@@ -41677,12 +41678,14 @@ var Picking = function Picking(world, renderer, camera) {
     stencilBuffer: false,
     depthBuffer: true
   };
+  this.pixelBuffer = new Uint8Array(4);
 
-  this._pickingTexture = new actor.WebGLRenderTarget(this._width / 10, this._height / 10, parameters);
+  this._pickingTexture = new actor.WebGLRenderTarget(1, 1, parameters);
+
 
   this._nextId = 1;
 
-  this._resizeTexture();
+  // this._resizeTexture();
   this._initEvents();
 };
 
@@ -41709,16 +41712,15 @@ Picking.prototype._resizeTexture = function _resizeTexture () {
 
   this._width = size.width;
   this._height = size.height;
-  this._pickingTexture.setSize(this._width, this._height);
-  this._pixelBuffer = new Uint8Array(4 * this._width * this._height);
+  this._pickingTexture.setSize(1, 1);
   this._needUpdate = true;
 };
 Picking.prototype._update = function _update (point) {
   var texture = this._pickingTexture;
+  this._camera.setViewOffset(this._width, this._height, point.x, point.y, 1, 1);
   this._renderer.render(this._pickingScene, this._camera, texture);
-  this.pixelBuffer = new Uint8Array(4);
-  this._renderer.readRenderTargetPixels(texture, point.x, this._height - point.y, 1, 1, this.pixelBuffer);
-
+  this._camera.clearViewOffset();
+  this._renderer.readRenderTargetPixels(texture, 0, 0, 1, 1, this.pixelBuffer);
 
 };
 Picking.prototype._filterObject = function _filterObject (id) {
@@ -41738,19 +41740,31 @@ Picking.prototype._layerIsVisable = function _layerIsVisable (object) {
   }
   return isVisable;
 };
+Picking.prototype._layerisListened = function _layerisListened (object, type) {
+  var layers = this._world.getLayers();
+  var isListened = false;
+  for (var i = 0; i < layers.length; i++) {
+    var layer = layers[i];
+    if (object.name === layer.layerId) {
+      isListened = layer.getListeners(type).length > 0;
+      break;
+    }
+  }
+  return isListened;
+};
 Picking.prototype._pickAllObject = function _pickAllObject (point, normalisedPoint) {
     var this$1 = this;
 
 
   this.world.children.forEach(function (object, index) {
-    if (!this$1._layerIsVisable(object)) {
+    if (!this$1._layerIsVisable(object) || !this$1._layerisListened(object, point.type)) {
       return;
     }
     this$1._filterObject(index);
     var item = this$1._pick(point, normalisedPoint, object.name);
     item.type = point.type;
     item._parent = point._parent;
-    this$1._world.emit('pick', item);
+    // this._world.emit('pick', item);
     this$1._world.emit('pick-' + object.name, item);
 
   });
@@ -42265,25 +42279,18 @@ var Select = /*@__PURE__*/(function (Interaction) {
   return Select;
 }(Interaction));
 
-function throttle(fn, time) {
-  var pending = false;
-  var timerId;
+function throttle(fn, delay) {
+  var lastCall = 0;
+  return function() {
+    var args = [], len = arguments.length;
+    while ( len-- ) args[ len ] = arguments[ len ];
 
-  var later = function () {
-    timerId = null;
-    if (pending) {
-      fn();
-      timerId = setTimeout(later, time);
-      pending = false;
+    var now = (new Date()).getTime();
+    if (now - lastCall < delay) {
+      return;
     }
-  };
-
-  return function () {
-    pending = true;
-    if (!timerId) {
-      later();
-    }
-    return timerId;
+    lastCall = now;
+    return fn.apply(void 0, args);
   };
 }
 
@@ -44540,7 +44547,6 @@ function DrawLine(layerData, layer, buffer) {
   var indexArray = buffer.indexArray;
   var hasPattern = buffer.hasPattern;
 
-
   var geometry = new actor.BufferGeometry();
   geometry.setIndex(new actor.Uint32BufferAttribute(indexArray, 1));
   geometry.addAttribute('pickingId', new actor.Float32BufferAttribute(attributes.pickingIds, 1));
@@ -44799,7 +44805,7 @@ function ImageBuffer(layerData, opt) {
   layerData.forEach(function (item) {
     var ref$1, ref$2;
 
-    var color = item.color;
+    var color = item.color; if ( color === void 0 ) color = [ 0, 0, 0, 0 ];
     var size = item.size;
     var id = item.id;
     var shape = item.shape;
@@ -44857,8 +44863,6 @@ var PointMaterial = /*@__PURE__*/(function (Material) {
     this.vertexShader = vs;
     this.fragmentShader = fs;
     this.transparent = true;
-    this.blending = actor.THREE[Material.blendingEnum[_uniforms.blending]];
-    if (!this.uniforms.shape) { this.blending = actor.AdditiveBlending; }
     if (this.uniforms.u_texture) {
       this.defines.TEXCOORD_0 = true;
     }
@@ -44889,6 +44893,7 @@ var PointMaterial = /*@__PURE__*/(function (Material) {
 function DrawImage(layerData, layer) {
   var geometry = new actor.BufferGeometry();
   var style = layer.get('styleOptions');
+  var activeOption = layer.get('activedOptions');
   var strokeWidth = style.strokeWidth;
   var stroke = style.stroke;
   var opacity = style.opacity;
@@ -44905,12 +44910,14 @@ function DrawImage(layerData, layer) {
     u_opacity: opacity,
     u_strokeWidth: strokeWidth,
     u_stroke: stroke,
+    u_activeColor: activeOption.fill,
     u_texture: texture
   }, {
     SHAPE: false,
     TEXCOORD_0: true
   });
   material.depthTest = false;
+  material.setBending(style.blending);
   var strokeMesh = new actor.Points(geometry, material);
   return strokeMesh;
 }
@@ -44973,11 +44980,11 @@ function DrawNormal(layerData, layer) {
   geometry.addAttribute('a_size', new actor.Float32BufferAttribute(attributes.sizes, 1));
   var material = new PointMaterial$1({
     u_opacity: opacity,
-    u_activeColor: activeOption.fill,
-    blending: style.blending
+    u_activeColor: activeOption.fill
   }, {
   }, style);
   var strokeMesh = new actor.Points(geometry, material);
+  material.setBending('additive');
   return strokeMesh;
 }
 
@@ -51532,9 +51539,9 @@ FontAtlasManager.prototype._getKey = function _getKey () {
 
 Object.defineProperties( FontAtlasManager.prototype, prototypeAccessors );
 
-var point_frag = "precision highp float;\n#define PI 3.14159265359\n#define TWO_PI 6.28318530718\nuniform float u_strokeWidth;uniform vec4 u_stroke;uniform sampler2D u_texture;varying vec2 v_rs;varying vec2 v_uv;varying vec4 v_color;varying float v_shape;const float u_buffer=.75;const float u_gamma=.08;const vec3 halo=vec3(1.);void main(){\n#ifdef TEXCOORD_0\nvec2 pos=v_uv+gl_PointCoord/512.*64.;pos.y=1.-pos.y;vec4 textureColor=texture2D(u_texture,pos);gl_FragColor=textureColor;\n#pragma include \"pick\"\nreturn;\n#endif\nif(v_color.a==0.)discard;vec4 pcolor=v_color;float ro=v_rs.x;float ri=v_rs.y;float d=0.;if(ro<3.){gl_FragColor=pcolor;return;}vec2 st=gl_PointCoord*2.-1.;float a=atan(st.x,st.y)+PI;float r=TWO_PI/v_shape;float ratio=1.+(1.1-smoothstep(2.8,6.,v_shape));float dis2center=cos(floor(.5+a/r)*r-a)*length(st)*ro*ratio;float alpha=smoothstep(ro,ro+.1,dis2center);if(alpha==1.){discard;}if(u_strokeWidth>0.){if(dis2center>ro-u_strokeWidth){gl_FragColor=vec4(u_stroke.xyz,u_stroke.a*(ro-dis2center));return;}else if(dis2center>ri){gl_FragColor=u_stroke;return;}}if(dis2center>ri-u_strokeWidth){float factor=ri-dis2center;if(u_strokeWidth==0.){float a=pcolor.a*factor;gl_FragColor=vec4(pcolor.rgb,a);}else{float a=u_stroke.a*(1.-factor)+pcolor.a*factor;gl_FragColor=vec4(u_stroke.rgb*(1.-factor)+pcolor.rgb*factor,a);}}else{gl_FragColor=pcolor;}\n#pragma include \"pick\"\n}";
+var point_frag = "precision highp float;\n#define PI 3.14159265359\n#define TWO_PI 6.28318530718\nuniform float u_strokeWidth;uniform vec4 u_stroke;uniform sampler2D u_texture;varying vec2 v_rs;varying vec2 v_uv;varying vec4 v_color;varying float v_shape;const float u_buffer=.75;uniform vec4 u_activeColor;const float u_gamma=.08;const vec3 halo=vec3(1.);void main(){\n#ifdef TEXCOORD_0\nvec2 pos=v_uv+gl_PointCoord/512.*64.;pos.y=1.-pos.y;vec4 textureColor=texture2D(u_texture,pos);\n#ifdef PICK\nif(worldId.x==0.&&worldId.y==0.&& worldId.z==0.&& textureColor==vec4(0.)){discard;return;}gl_FragColor=worldId;return;\n#endif\nif(v_color==vec4(0.)){gl_FragColor=textureColor; \n}else {gl_FragColor=step(0.01,textureColor.x)*v_color;}return;\n#endif\nif(v_color.a==0.)discard;vec4 pcolor=v_color;float ro=v_rs.x;float ri=v_rs.y;float d=0.;if(ro<3.){gl_FragColor=pcolor;return;}vec2 st=gl_PointCoord*2.-1.;float a=atan(st.x,st.y)+PI;float r=TWO_PI/v_shape;float ratio=1.+(1.1-smoothstep(2.8,6.,v_shape));float dis2center=cos(floor(.5+a/r)*r-a)*length(st)*ro*ratio;float alpha=smoothstep(ro,ro+.1,dis2center);if(alpha==1.){discard;}if(u_strokeWidth>0.){if(dis2center>ro-u_strokeWidth){gl_FragColor=vec4(u_stroke.xyz,u_stroke.a*(ro-dis2center));return;}else if(dis2center>ri){gl_FragColor=u_stroke;return;}}if(dis2center>ri-u_strokeWidth){float factor=ri-dis2center;if(u_strokeWidth==0.){float a=pcolor.a*factor;gl_FragColor=vec4(pcolor.rgb,a);}else{float a=u_stroke.a*(1.-factor)+pcolor.a*factor;gl_FragColor=vec4(u_stroke.rgb*(1.-factor)+pcolor.rgb*factor,a);}}else{gl_FragColor=pcolor;}\n#pragma include \"pick\"\n}";
 
-var point_vert = "precision highp float;attribute vec4 a_color;attribute float a_size;attribute float a_shape;uniform vec4 u_stroke;uniform float u_strokeWidth;uniform float u_opacity;uniform float u_zoom;varying vec4 v_color;varying vec2 v_rs;varying vec2 v_uv;varying float v_shape;uniform float u_activeId;uniform vec4 u_activeColor;void main() {mat4 matModelViewProjection=projectionMatrix*modelViewMatrix;v_color=a_color;v_color.a*=u_opacity;if(pickingId==u_activeId) {v_color=u_activeColor;}gl_Position= matModelViewProjection *vec4(position,1.0);gl_PointSize=a_size;v_rs=vec2(a_size/2.0,a_size/2.0-u_strokeWidth);\n#ifdef TEXCOORD_0\nv_uv=uv;\n#endif\n#ifdef SHAPE\nv_shape=a_shape;\n#endif\n#ifdef PICK\nworldId=id_toPickColor(pickingId);\n#endif\n}";
+var point_vert = "precision highp float;attribute vec4 a_color;attribute float a_size;attribute float a_shape;uniform vec4 u_stroke;uniform float u_strokeWidth;uniform float u_opacity;uniform float u_zoom;varying vec4 v_color;varying vec2 v_rs;varying vec2 v_uv;varying float v_shape;uniform float u_activeId;uniform vec4 u_activeColor;void main() {mat4 matModelViewProjection=projectionMatrix*modelViewMatrix;v_color=a_color;v_color.a*=u_opacity;if(pickingId==u_activeId) {v_color=u_activeColor;}gl_Position= matModelViewProjection *vec4(position,1.0);gl_PointSize=a_size;v_rs=vec2(a_size,a_size-u_strokeWidth);\n#ifdef TEXCOORD_0\nv_uv=uv;\n#endif\n#ifdef SHAPE\nv_shape=a_shape;\n#endif\n#ifdef PICK\nworldId=id_toPickColor(pickingId);\n#endif\n}";
 
 var polygon_frag = "precision highp float;uniform vec4 u_baseColor : [ 1.0,0,0,1.0 ];uniform vec4 u_brightColor : [ 1.0,0,0,1.0 ];uniform vec4 u_windowColor : [ 1.0,0,0,1.0 ];uniform float u_zoom : 0;uniform float u_time : 0;uniform float u_near : 0;uniform float u_far : 1;\n#ifdef ANIMATE\nvarying vec2 v_texCoord;\n#endif\nvarying vec4 v_color;vec3 getWindowColor(float n,float hot,vec3 brightColor,vec3 darkColor) {float s=step(hot,n);vec3 color=mix(brightColor,vec3(0.9,0.9,1.0),n);return mix(darkColor,color,s);}float random (vec2 st) {return fract(sin(dot(st.xy,vec2(12.9898,78.233)))*43758.5453123);}float LinearizeDepth() \n{float z=gl_FragCoord.z*2.0-1.0;  \nreturn (2.0*u_near*u_far)/(u_far+u_near-z*(u_far-u_near));\t\n}vec3 fog(vec3 color,vec3 fogColor,float depth){float fogFactor=clamp(depth,0.0,1.0);vec3 output_color=mix(fogColor,color,fogFactor);return output_color;}float sdRect(vec2 p,vec2 sz) {  \nvec2 d=abs(p)-sz;float outside=length(max(d,0.));float inside=min(max(d.x,d.y),0.);return outside+inside;}void main() {if(v_color.w==0.0) {discard;return;}vec3 baseColor=u_baseColor.xyz;vec3 brightColor=u_brightColor.xyz;vec3 windowColor=u_windowColor.xyz;float targetColId=5.;float depth=1.0-LinearizeDepth()/u_far*u_zoom;  \nvec3 fogColor=vec3(23.0/255.0,31.0/255.0,51.0/255.0); \n#ifdef ANIMATE \nif(v_texCoord.x < 0.) {vec3 foggedColor=fog(baseColor.xyz+vec3(0.12*0.9,0.2*0.9,0.3*0.9),fogColor,depth);gl_FragColor=vec4( foggedColor,v_color.w);}else {vec2 st=v_texCoord; \nvec2  UvScale=v_texCoord;float tStep=min(0.08,max(0.05*(18.0-u_zoom),0.02));float tStart=0.25*tStep;float tEnd=0.75*tStep;float u=mod(UvScale.x,tStep);float v=mod(UvScale.y,tStep);float ux=floor(UvScale.x/tStep);float uy=floor(UvScale.y/tStep);float n=random(vec2(ux,uy));float lightP=u_time;float head=1.0-step(0.005,st.y);/*step3*/float sU=step(tStart,u)-step(tEnd,u);float sV=step(tStart,v)-step(tEnd,v);vec2 windowSize=vec2(abs(tEnd-tStart),abs(tEnd-tStart));float dist=sdRect(vec2(u,v),windowSize);float s=sU*sV;float curColId=floor(UvScale.x/tStep);float sCol=step(targetColId-0.2,curColId)-step(targetColId+0.2,curColId);float mLightP=mod(lightP,2.);float sRow=step(mLightP-0.2,st.y)-step(mLightP,st.y);if(ux==targetColId){n=0.;}float timeP=min(0.75,abs ( sin(u_time/6.0) ) );float hot=smoothstep(1.0,0.0,timeP);vec3 color=mix(baseColor,getWindowColor(n,hot,brightColor,windowColor),s);float sFinal=s*sCol*sRow;color+=mix(baseColor,brightColor,sFinal*n);color=color*v_color.rgb;vec3 foggedColor=fog(color,fogColor,depth);gl_FragColor=vec4(foggedColor,1.0); \n}\n#else\ngl_FragColor=vec4(v_color.xyz,v_color.w);\n#endif\n#pragma include \"pick\"\n}";
 
@@ -53121,7 +53128,7 @@ Attribution: Attribution,
 Layers: Layers
 });
 
-var EventNames = [ 'mouseout', 'mouseover', 'mousemove', 'mousedown', 'mouseleave', 'mouseleave', 'mouseleave', 'touchstart', 'touchmove', 'touchend', 'mouseup', 'rightclick', 'click', 'dblclick' ];
+var EventNames = [ 'mouseout', 'mouseover', 'mousemove', 'mousedown', 'mouseleave', 'touchstart', 'touchmove', 'touchend', 'mouseup', 'rightclick', 'click', 'dblclick' ];
 var Scene$1 = /*@__PURE__*/(function (Base) {
   function Scene(cfg) {
     Base.call(this, cfg);
@@ -53271,18 +53278,18 @@ var Scene$1 = /*@__PURE__*/(function (Base) {
       if (e.target.nodeName !== 'CANVAS') { return; }
       this$1._engine._picking.pickdata(e);
     };
+    this._throttleHander = throttle(this._eventHander, 50);
     EventNames.forEach(function (event) {
-      this$1._container.addEventListener(event, this$1._eventHander, true);
+      this$1._container.addEventListener(event, this$1._throttleHander, true);
     });
   };
   Scene.prototype._unRegistEvents = function _unRegistEvents () {
     var this$1 = this;
 
     EventNames.forEach(function (event) {
-      this$1._container.removeEventListener(event, this$1._eventHander, true);
+      this$1._container.removeEventListener(event, this$1._throttleHander, true);
     });
   };
-
   Scene.prototype.removeLayer = function removeLayer (layer) {
     var layerIndex = this._layers.indexOf(layer);
     if (layerIndex > -1) {
@@ -54114,7 +54121,7 @@ keysShim$1.shim = function shimObjectKeys() {
 	return Object.keys || keysShim$1;
 };
 
-var _objectKeys_1_1_1_objectKeys = keysShim$1;
+var objectKeys = keysShim$1;
 
 var hasToStringTag = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 var toStr$2 = Object.prototype.toString;
@@ -54144,7 +54151,7 @@ var supportsStandardArguments = (function () {
 
 isStandardArguments.isLegacyArguments = isLegacyArguments; // for tests
 
-var _isArguments_1_0_4_isArguments = supportsStandardArguments ? isStandardArguments : isLegacyArguments;
+var isArguments$1 = supportsStandardArguments ? isStandardArguments : isLegacyArguments;
 
 /* https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.is */
 
@@ -54152,7 +54159,7 @@ var NumberIsNaN = function (value) {
 	return value !== value;
 };
 
-var _objectIs_1_0_1_objectIs = function is(a, b) {
+var objectIs = function is(a, b) {
 	if (a === 0 && b === 0) {
 		return 1 / a === 1 / b;
 	} else if (a === b) {
@@ -54214,9 +54221,9 @@ var implementation$1 = function bind(that) {
     return bound;
 };
 
-var _functionBind_1_1_1_functionBind = Function.prototype.bind || implementation$1;
+var functionBind = Function.prototype.bind || implementation$1;
 
-var src = _functionBind_1_1_1_functionBind.call(Function.call, Object.prototype.hasOwnProperty);
+var src = functionBind.call(Function.call, Object.prototype.hasOwnProperty);
 
 var regexExec = RegExp.prototype.exec;
 var gOPD = Object.getOwnPropertyDescriptor;
@@ -54238,7 +54245,7 @@ var toStr$4 = Object.prototype.toString;
 var regexClass = '[object RegExp]';
 var hasToStringTag$1 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 
-var _isRegex_1_0_4_isRegex = function isRegex(value) {
+var isRegex = function isRegex(value) {
 	if (!value || typeof value !== 'object') {
 		return false;
 	}
@@ -54298,7 +54305,7 @@ var defineProperty$1 = function (object, name, value, predicate) {
 
 var defineProperties = function (object, map) {
 	var predicates = arguments.length > 2 ? arguments[2] : {};
-	var props = _objectKeys_1_1_1_objectKeys(map);
+	var props = objectKeys(map);
 	if (hasSymbols) {
 		props = concat.call(props, Object.getOwnPropertySymbols(map));
 	}
@@ -54309,7 +54316,7 @@ var defineProperties = function (object, map) {
 
 defineProperties.supportsDescriptors = !!supportsDescriptors;
 
-var _defineProperties_1_1_3_defineProperties = defineProperties;
+var defineProperties_1 = defineProperties;
 
 var toObject = Object;
 var TypeErr = TypeError;
@@ -54340,7 +54347,7 @@ var implementation$2 = function flags() {
 	return result;
 };
 
-var supportsDescriptors$1 = _defineProperties_1_1_3_defineProperties.supportsDescriptors;
+var supportsDescriptors$1 = defineProperties_1.supportsDescriptors;
 var gOPD$1 = Object.getOwnPropertyDescriptor;
 var TypeErr$1 = TypeError;
 
@@ -54357,7 +54364,7 @@ var polyfill = function getPolyfill() {
 	return implementation$2;
 };
 
-var supportsDescriptors$2 = _defineProperties_1_1_3_defineProperties.supportsDescriptors;
+var supportsDescriptors$2 = defineProperties_1.supportsDescriptors;
 
 var gOPD$2 = Object.getOwnPropertyDescriptor;
 var defineProperty$2 = Object.defineProperty;
@@ -54384,13 +54391,13 @@ var shim = function shimFlags() {
 
 var flagsBound = Function.call.bind(implementation$2);
 
-_defineProperties_1_1_3_defineProperties(flagsBound, {
+defineProperties_1(flagsBound, {
 	getPolyfill: polyfill,
 	implementation: implementation$2,
 	shim: shim
 });
 
-var _regexp_prototype_flags_1_2_0_regexp_prototype_flags = flagsBound;
+var regexp_prototype_flags = flagsBound;
 
 var getDay = Date.prototype.getDay;
 var tryDateObject = function tryDateObject(value) {
@@ -54406,7 +54413,7 @@ var toStr$6 = Object.prototype.toString;
 var dateClass = '[object Date]';
 var hasToStringTag$2 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 
-var _isDateObject_1_0_1_isDateObject = function isDateObject(value) {
+var isDateObject = function isDateObject(value) {
 	if (typeof value !== 'object' || value === null) { return false; }
 	return hasToStringTag$2 ? tryDateObject(value) : toStr$6.call(value) === dateClass;
 };
@@ -54417,13 +54424,13 @@ function deepEqual(actual, expected, options) {
   var opts = options || {};
 
   // 7.1. All identical values are equivalent, as determined by ===.
-  if (opts.strict ? _objectIs_1_0_1_objectIs(actual, expected) : actual === expected) {
+  if (opts.strict ? objectIs(actual, expected) : actual === expected) {
     return true;
   }
 
   // 7.3. Other pairs that do not both pass typeof value == 'object', equivalence is determined by ==.
   if (!actual || !expected || (typeof actual !== 'object' && typeof expected !== 'object')) {
-    return opts.strict ? _objectIs_1_0_1_objectIs(actual, expected) : actual == expected;
+    return opts.strict ? objectIs(actual, expected) : actual == expected;
   }
 
   /*
@@ -54464,16 +54471,16 @@ function objEquiv(a, b, opts) {
   // an identical 'prototype' property.
   if (a.prototype !== b.prototype) { return false; }
 
-  if (_isArguments_1_0_4_isArguments(a) !== _isArguments_1_0_4_isArguments(b)) { return false; }
+  if (isArguments$1(a) !== isArguments$1(b)) { return false; }
 
-  var aIsRegex = _isRegex_1_0_4_isRegex(a);
-  var bIsRegex = _isRegex_1_0_4_isRegex(b);
+  var aIsRegex = isRegex(a);
+  var bIsRegex = isRegex(b);
   if (aIsRegex !== bIsRegex) { return false; }
   if (aIsRegex || bIsRegex) {
-    return a.source === b.source && _regexp_prototype_flags_1_2_0_regexp_prototype_flags(a) === _regexp_prototype_flags_1_2_0_regexp_prototype_flags(b);
+    return a.source === b.source && regexp_prototype_flags(a) === regexp_prototype_flags(b);
   }
 
-  if (_isDateObject_1_0_1_isDateObject(a) && _isDateObject_1_0_1_isDateObject(b)) {
+  if (isDateObject(a) && isDateObject(b)) {
     return getTime.call(a) === getTime.call(b);
   }
 
@@ -54491,8 +54498,8 @@ function objEquiv(a, b, opts) {
   if (typeof a !== typeof b) { return false; }
 
   try {
-    var ka = _objectKeys_1_1_1_objectKeys(a);
-    var kb = _objectKeys_1_1_1_objectKeys(b);
+    var ka = objectKeys(a);
+    var kb = objectKeys(b);
   } catch (e) { // happens when one is a string literal and the other isn't
     return false;
   }
@@ -54515,7 +54522,7 @@ function objEquiv(a, b, opts) {
   return true;
 }
 
-var _deepEqual_1_1_0_deepEqual = deepEqual;
+var deepEqual_1 = deepEqual;
 
 /* eslint-disable camelcase */
 var Children$1 = React.Children;
@@ -54631,16 +54638,16 @@ var BaseLayer = function (_Component) {
       var nextShape = nextProps.shape;
       var nextfilter = nextProps.filter;
       var nextOptions = nextProps.options;
-      if (!_deepEqual_1_1_0_deepEqual(source, nextSource)) {
+      if (!deepEqual_1(source, nextSource)) {
         this.layer.setData(nextSource.data);
       }
-      if (!_deepEqual_1_1_0_deepEqual(nextOptions, options)) {
+      if (!deepEqual_1(nextOptions, options)) {
         this.updateLayerOption(nextOptions, options);
       }
-      !_deepEqual_1_1_0_deepEqual(color, nextColor) && this.layer.color(nextColor.field, nextColor.value);
-      !_deepEqual_1_1_0_deepEqual(size, nextSize) && this.layer.size(nextSize.field, nextSize.value);
-      !_deepEqual_1_1_0_deepEqual(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value);
-      !_deepEqual_1_1_0_deepEqual(style, nextStyle) && this.layer.style(nextStyle);
+      !deepEqual_1(color, nextColor) && this.layer.color(nextColor.field, nextColor.value);
+      !deepEqual_1(size, nextSize) && this.layer.size(nextSize.field, nextSize.value);
+      !deepEqual_1(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value);
+      !deepEqual_1(style, nextStyle) && this.layer.style(nextStyle);
       if (!this.propsEqual(filter, nextfilter)) {
         this.layer.filter(nextfilter.field, nextfilter.value);
       }
@@ -54667,12 +54674,12 @@ var BaseLayer = function (_Component) {
     key: 'propsEqual',
     value: function propsEqual(pre, next) {
       if (!pre || !next) {
-        return _deepEqual_1_1_0_deepEqual(pre, next);
+        return deepEqual_1(pre, next);
       }
       if (!pre.value || !pre.value) {
-        return _deepEqual_1_1_0_deepEqual(pre, next);
+        return deepEqual_1(pre, next);
       }
-      if (_deepEqual_1_1_0_deepEqual(pre.value.toString(), next.value.toString()) && _deepEqual_1_1_0_deepEqual(pre.id, next.id)) {
+      if (deepEqual_1(pre.value.toString(), next.value.toString()) && deepEqual_1(pre.id, next.id)) {
         return true;
       }
       return false;
@@ -54869,575 +54876,6 @@ Point.defaultProps = Object.assign(BaseLayer.defaultProps, {
     opacity: 1.0
   }
 });
-
-var toStr$7 = Object.prototype.toString;
-
-var isArguments$1 = function isArguments(value) {
-	var str = toStr$7.call(value);
-	var isArgs = str === '[object Arguments]';
-	if (!isArgs) {
-		isArgs = str !== '[object Array]' &&
-			value !== null &&
-			typeof value === 'object' &&
-			typeof value.length === 'number' &&
-			value.length >= 0 &&
-			toStr$7.call(value.callee) === '[object Function]';
-	}
-	return isArgs;
-};
-
-var keysShim$2;
-if (!Object.keys) {
-	// modified from https://github.com/es-shims/es5-shim
-	var has$1 = Object.prototype.hasOwnProperty;
-	var toStr$8 = Object.prototype.toString;
-	var isArgs$1 = isArguments$1; // eslint-disable-line global-require
-	var isEnumerable$1 = Object.prototype.propertyIsEnumerable;
-	var hasDontEnumBug$1 = !isEnumerable$1.call({ toString: null }, 'toString');
-	var hasProtoEnumBug$1 = isEnumerable$1.call(function () {}, 'prototype');
-	var dontEnums$1 = [
-		'toString',
-		'toLocaleString',
-		'valueOf',
-		'hasOwnProperty',
-		'isPrototypeOf',
-		'propertyIsEnumerable',
-		'constructor'
-	];
-	var equalsConstructorPrototype$1 = function (o) {
-		var ctor = o.constructor;
-		return ctor && ctor.prototype === o;
-	};
-	var excludedKeys$1 = {
-		$applicationCache: true,
-		$console: true,
-		$external: true,
-		$frame: true,
-		$frameElement: true,
-		$frames: true,
-		$innerHeight: true,
-		$innerWidth: true,
-		$onmozfullscreenchange: true,
-		$onmozfullscreenerror: true,
-		$outerHeight: true,
-		$outerWidth: true,
-		$pageXOffset: true,
-		$pageYOffset: true,
-		$parent: true,
-		$scrollLeft: true,
-		$scrollTop: true,
-		$scrollX: true,
-		$scrollY: true,
-		$self: true,
-		$webkitIndexedDB: true,
-		$webkitStorageInfo: true,
-		$window: true
-	};
-	var hasAutomationEqualityBug$1 = (function () {
-		/* global window */
-		if (typeof window === 'undefined') { return false; }
-		for (var k in window) {
-			try {
-				if (!excludedKeys$1['$' + k] && has$1.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
-					try {
-						equalsConstructorPrototype$1(window[k]);
-					} catch (e) {
-						return true;
-					}
-				}
-			} catch (e) {
-				return true;
-			}
-		}
-		return false;
-	}());
-	var equalsConstructorPrototypeIfNotBuggy$1 = function (o) {
-		/* global window */
-		if (typeof window === 'undefined' || !hasAutomationEqualityBug$1) {
-			return equalsConstructorPrototype$1(o);
-		}
-		try {
-			return equalsConstructorPrototype$1(o);
-		} catch (e) {
-			return false;
-		}
-	};
-
-	keysShim$2 = function keys(object) {
-		var isObject = object !== null && typeof object === 'object';
-		var isFunction = toStr$8.call(object) === '[object Function]';
-		var isArguments = isArgs$1(object);
-		var isString = isObject && toStr$8.call(object) === '[object String]';
-		var theKeys = [];
-
-		if (!isObject && !isFunction && !isArguments) {
-			throw new TypeError('Object.keys called on a non-object');
-		}
-
-		var skipProto = hasProtoEnumBug$1 && isFunction;
-		if (isString && object.length > 0 && !has$1.call(object, 0)) {
-			for (var i = 0; i < object.length; ++i) {
-				theKeys.push(String(i));
-			}
-		}
-
-		if (isArguments && object.length > 0) {
-			for (var j = 0; j < object.length; ++j) {
-				theKeys.push(String(j));
-			}
-		} else {
-			for (var name in object) {
-				if (!(skipProto && name === 'prototype') && has$1.call(object, name)) {
-					theKeys.push(String(name));
-				}
-			}
-		}
-
-		if (hasDontEnumBug$1) {
-			var skipConstructor = equalsConstructorPrototypeIfNotBuggy$1(object);
-
-			for (var k = 0; k < dontEnums$1.length; ++k) {
-				if (!(skipConstructor && dontEnums$1[k] === 'constructor') && has$1.call(object, dontEnums$1[k])) {
-					theKeys.push(dontEnums$1[k]);
-				}
-			}
-		}
-		return theKeys;
-	};
-}
-var implementation$3 = keysShim$2;
-
-var slice$2 = Array.prototype.slice;
-
-
-var origKeys$1 = Object.keys;
-var keysShim$3 = origKeys$1 ? function keys(o) { return origKeys$1(o); } : implementation$3;
-
-var originalKeys$1 = Object.keys;
-
-keysShim$3.shim = function shimObjectKeys() {
-	if (Object.keys) {
-		var keysWorksWithArguments = (function () {
-			// Safari 5.0 bug
-			var args = Object.keys(arguments);
-			return args && args.length === arguments.length;
-		}(1, 2));
-		if (!keysWorksWithArguments) {
-			Object.keys = function keys(object) { // eslint-disable-line func-name-matching
-				if (isArguments$1(object)) {
-					return originalKeys$1(slice$2.call(object));
-				}
-				return originalKeys$1(object);
-			};
-		}
-	} else {
-		Object.keys = keysShim$3;
-	}
-	return Object.keys || keysShim$3;
-};
-
-var objectKeys = keysShim$3;
-
-var hasToStringTag$3 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
-var toStr$9 = Object.prototype.toString;
-
-var isStandardArguments$1 = function isArguments(value) {
-	if (hasToStringTag$3 && value && typeof value === 'object' && Symbol.toStringTag in value) {
-		return false;
-	}
-	return toStr$9.call(value) === '[object Arguments]';
-};
-
-var isLegacyArguments$1 = function isArguments(value) {
-	if (isStandardArguments$1(value)) {
-		return true;
-	}
-	return value !== null &&
-		typeof value === 'object' &&
-		typeof value.length === 'number' &&
-		value.length >= 0 &&
-		toStr$9.call(value) !== '[object Array]' &&
-		toStr$9.call(value.callee) === '[object Function]';
-};
-
-var supportsStandardArguments$1 = (function () {
-	return isStandardArguments$1(arguments);
-}());
-
-isStandardArguments$1.isLegacyArguments = isLegacyArguments$1; // for tests
-
-var isArguments$2 = supportsStandardArguments$1 ? isStandardArguments$1 : isLegacyArguments$1;
-
-/* https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.is */
-
-var NumberIsNaN$1 = function (value) {
-	return value !== value;
-};
-
-var objectIs = function is(a, b) {
-	if (a === 0 && b === 0) {
-		return 1 / a === 1 / b;
-	} else if (a === b) {
-		return true;
-	} else if (NumberIsNaN$1(a) && NumberIsNaN$1(b)) {
-		return true;
-	}
-	return false;
-};
-
-/* eslint no-invalid-this: 1 */
-
-var ERROR_MESSAGE$1 = 'Function.prototype.bind called on incompatible ';
-var slice$3 = Array.prototype.slice;
-var toStr$a = Object.prototype.toString;
-var funcType$1 = '[object Function]';
-
-var implementation$4 = function bind(that) {
-    var target = this;
-    if (typeof target !== 'function' || toStr$a.call(target) !== funcType$1) {
-        throw new TypeError(ERROR_MESSAGE$1 + target);
-    }
-    var args = slice$3.call(arguments, 1);
-
-    var bound;
-    var binder = function () {
-        if (this instanceof bound) {
-            var result = target.apply(
-                this,
-                args.concat(slice$3.call(arguments))
-            );
-            if (Object(result) === result) {
-                return result;
-            }
-            return this;
-        } else {
-            return target.apply(
-                that,
-                args.concat(slice$3.call(arguments))
-            );
-        }
-    };
-
-    var boundLength = Math.max(0, target.length - args.length);
-    var boundArgs = [];
-    for (var i = 0; i < boundLength; i++) {
-        boundArgs.push('$' + i);
-    }
-
-    bound = Function('binder', 'return function (' + boundArgs.join(',') + '){ return binder.apply(this,arguments); }')(binder);
-
-    if (target.prototype) {
-        var Empty = function Empty() {};
-        Empty.prototype = target.prototype;
-        bound.prototype = new Empty();
-        Empty.prototype = null;
-    }
-
-    return bound;
-};
-
-var functionBind = Function.prototype.bind || implementation$4;
-
-var src$1 = functionBind.call(Function.call, Object.prototype.hasOwnProperty);
-
-var regexExec$1 = RegExp.prototype.exec;
-var gOPD$3 = Object.getOwnPropertyDescriptor;
-
-var tryRegexExecCall$1 = function tryRegexExec(value) {
-	try {
-		var lastIndex = value.lastIndex;
-		value.lastIndex = 0;
-
-		regexExec$1.call(value);
-		return true;
-	} catch (e) {
-		return false;
-	} finally {
-		value.lastIndex = lastIndex;
-	}
-};
-var toStr$b = Object.prototype.toString;
-var regexClass$1 = '[object RegExp]';
-var hasToStringTag$4 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
-
-var isRegex = function isRegex(value) {
-	if (!value || typeof value !== 'object') {
-		return false;
-	}
-	if (!hasToStringTag$4) {
-		return toStr$b.call(value) === regexClass$1;
-	}
-
-	var descriptor = gOPD$3(value, 'lastIndex');
-	var hasLastIndexDataProperty = descriptor && src$1(descriptor, 'value');
-	if (!hasLastIndexDataProperty) {
-		return false;
-	}
-
-	return tryRegexExecCall$1(value);
-};
-
-var hasSymbols$1 = typeof Symbol === 'function' && typeof Symbol('foo') === 'symbol';
-
-var toStr$c = Object.prototype.toString;
-var concat$1 = Array.prototype.concat;
-var origDefineProperty$1 = Object.defineProperty;
-
-var isFunction$1 = function (fn) {
-	return typeof fn === 'function' && toStr$c.call(fn) === '[object Function]';
-};
-
-var arePropertyDescriptorsSupported$1 = function () {
-	var obj = {};
-	try {
-		origDefineProperty$1(obj, 'x', { enumerable: false, value: obj });
-		// eslint-disable-next-line no-unused-vars, no-restricted-syntax
-		for (var _ in obj) { // jscs:ignore disallowUnusedVariables
-			return false;
-		}
-		return obj.x === obj;
-	} catch (e) { /* this is IE 8. */
-		return false;
-	}
-};
-var supportsDescriptors$3 = origDefineProperty$1 && arePropertyDescriptorsSupported$1();
-
-var defineProperty$3 = function (object, name, value, predicate) {
-	if (name in object && (!isFunction$1(predicate) || !predicate())) {
-		return;
-	}
-	if (supportsDescriptors$3) {
-		origDefineProperty$1(object, name, {
-			configurable: true,
-			enumerable: false,
-			value: value,
-			writable: true
-		});
-	} else {
-		object[name] = value;
-	}
-};
-
-var defineProperties$1 = function (object, map) {
-	var predicates = arguments.length > 2 ? arguments[2] : {};
-	var props = objectKeys(map);
-	if (hasSymbols$1) {
-		props = concat$1.call(props, Object.getOwnPropertySymbols(map));
-	}
-	for (var i = 0; i < props.length; i += 1) {
-		defineProperty$3(object, props[i], map[props[i]], predicates[props[i]]);
-	}
-};
-
-defineProperties$1.supportsDescriptors = !!supportsDescriptors$3;
-
-var defineProperties_1 = defineProperties$1;
-
-var toObject$1 = Object;
-var TypeErr$3 = TypeError;
-
-var implementation$5 = function flags() {
-	if (this != null && this !== toObject$1(this)) {
-		throw new TypeErr$3('RegExp.prototype.flags getter called on non-object');
-	}
-	var result = '';
-	if (this.global) {
-		result += 'g';
-	}
-	if (this.ignoreCase) {
-		result += 'i';
-	}
-	if (this.multiline) {
-		result += 'm';
-	}
-	if (this.dotAll) {
-		result += 's';
-	}
-	if (this.unicode) {
-		result += 'u';
-	}
-	if (this.sticky) {
-		result += 'y';
-	}
-	return result;
-};
-
-var supportsDescriptors$4 = defineProperties_1.supportsDescriptors;
-var gOPD$4 = Object.getOwnPropertyDescriptor;
-var TypeErr$4 = TypeError;
-
-var polyfill$1 = function getPolyfill() {
-	if (!supportsDescriptors$4) {
-		throw new TypeErr$4('RegExp.prototype.flags requires a true ES5 environment that supports property descriptors');
-	}
-	if (/a/mig.flags === 'gim') {
-		var descriptor = gOPD$4(RegExp.prototype, 'flags');
-		if (descriptor && typeof descriptor.get === 'function' && typeof (/a/).dotAll === 'boolean') {
-			return descriptor.get;
-		}
-	}
-	return implementation$5;
-};
-
-var supportsDescriptors$5 = defineProperties_1.supportsDescriptors;
-
-var gOPD$5 = Object.getOwnPropertyDescriptor;
-var defineProperty$4 = Object.defineProperty;
-var TypeErr$5 = TypeError;
-var getProto$1 = Object.getPrototypeOf;
-var regex$1 = /a/;
-
-var shim$1 = function shimFlags() {
-	if (!supportsDescriptors$5 || !getProto$1) {
-		throw new TypeErr$5('RegExp.prototype.flags requires a true ES5 environment that supports property descriptors');
-	}
-	var polyfill = polyfill$1();
-	var proto = getProto$1(regex$1);
-	var descriptor = gOPD$5(proto, 'flags');
-	if (!descriptor || descriptor.get !== polyfill) {
-		defineProperty$4(proto, 'flags', {
-			configurable: true,
-			enumerable: false,
-			get: polyfill
-		});
-	}
-	return polyfill;
-};
-
-var flagsBound$1 = Function.call.bind(implementation$5);
-
-defineProperties_1(flagsBound$1, {
-	getPolyfill: polyfill$1,
-	implementation: implementation$5,
-	shim: shim$1
-});
-
-var regexp_prototype_flags = flagsBound$1;
-
-var getDay$1 = Date.prototype.getDay;
-var tryDateObject$1 = function tryDateObject(value) {
-	try {
-		getDay$1.call(value);
-		return true;
-	} catch (e) {
-		return false;
-	}
-};
-
-var toStr$d = Object.prototype.toString;
-var dateClass$1 = '[object Date]';
-var hasToStringTag$5 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
-
-var isDateObject = function isDateObject(value) {
-	if (typeof value !== 'object' || value === null) { return false; }
-	return hasToStringTag$5 ? tryDateObject$1(value) : toStr$d.call(value) === dateClass$1;
-};
-
-var getTime$1 = Date.prototype.getTime;
-
-function deepEqual$1(actual, expected, options) {
-  var opts = options || {};
-
-  // 7.1. All identical values are equivalent, as determined by ===.
-  if (opts.strict ? objectIs(actual, expected) : actual === expected) {
-    return true;
-  }
-
-  // 7.3. Other pairs that do not both pass typeof value == 'object', equivalence is determined by ==.
-  if (!actual || !expected || (typeof actual !== 'object' && typeof expected !== 'object')) {
-    return opts.strict ? objectIs(actual, expected) : actual == expected;
-  }
-
-  /*
-   * 7.4. For all other Object pairs, including Array objects, equivalence is
-   * determined by having the same number of owned properties (as verified
-   * with Object.prototype.hasOwnProperty.call), the same set of keys
-   * (although not necessarily the same order), equivalent values for every
-   * corresponding key, and an identical 'prototype' property. Note: this
-   * accounts for both named and indexed properties on Arrays.
-   */
-  // eslint-disable-next-line no-use-before-define
-  return objEquiv$1(actual, expected, opts);
-}
-
-function isUndefinedOrNull$1(value) {
-  return value === null || value === undefined;
-}
-
-function isBuffer$1(x) {
-  if (!x || typeof x !== 'object' || typeof x.length !== 'number') {
-    return false;
-  }
-  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
-    return false;
-  }
-  if (x.length > 0 && typeof x[0] !== 'number') {
-    return false;
-  }
-  return true;
-}
-
-function objEquiv$1(a, b, opts) {
-  /* eslint max-statements: [2, 50] */
-  var i, key;
-  if (typeof a !== typeof b) { return false; }
-  if (isUndefinedOrNull$1(a) || isUndefinedOrNull$1(b)) { return false; }
-
-  // an identical 'prototype' property.
-  if (a.prototype !== b.prototype) { return false; }
-
-  if (isArguments$2(a) !== isArguments$2(b)) { return false; }
-
-  var aIsRegex = isRegex(a);
-  var bIsRegex = isRegex(b);
-  if (aIsRegex !== bIsRegex) { return false; }
-  if (aIsRegex || bIsRegex) {
-    return a.source === b.source && regexp_prototype_flags(a) === regexp_prototype_flags(b);
-  }
-
-  if (isDateObject(a) && isDateObject(b)) {
-    return getTime$1.call(a) === getTime$1.call(b);
-  }
-
-  var aIsBuffer = isBuffer$1(a);
-  var bIsBuffer = isBuffer$1(b);
-  if (aIsBuffer !== bIsBuffer) { return false; }
-  if (aIsBuffer || bIsBuffer) { // && would work too, because both are true or both false here
-    if (a.length !== b.length) { return false; }
-    for (i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) { return false; }
-    }
-    return true;
-  }
-
-  if (typeof a !== typeof b) { return false; }
-
-  try {
-    var ka = objectKeys(a);
-    var kb = objectKeys(b);
-  } catch (e) { // happens when one is a string literal and the other isn't
-    return false;
-  }
-  // having the same number of owned properties (keys incorporates hasOwnProperty)
-  if (ka.length !== kb.length) { return false; }
-
-  // the same set of keys (although not necessarily the same order),
-  ka.sort();
-  kb.sort();
-  // ~~~cheap key test
-  for (i = ka.length - 1; i >= 0; i--) {
-    if (ka[i] != kb[i]) { return false; }
-  }
-  // equivalent values for every corresponding key, and ~~~possibly expensive deep test
-  for (i = ka.length - 1; i >= 0; i--) {
-    key = ka[i];
-    if (!deepEqual$1(a[key], b[key], opts)) { return false; }
-  }
-
-  return true;
-}
-
-var deepEqual_1 = deepEqual$1;
 
 /* eslint-disable camelcase */
 
