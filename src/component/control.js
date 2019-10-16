@@ -30,7 +30,7 @@ class Control extends React.PureComponent {
     const { option } = this.props
     const ctr = Control.controlOption[option.type]
     this.ctr = new L7.Control[ctr.name]({
-      position: ctr.position
+      position: option.position || ctr.position
     }).addTo(scene)
     scene.set(props.type, this.ctr)
   }
