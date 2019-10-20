@@ -2,7 +2,7 @@
 import React from 'react'
 import BaseLayer from './baseLayer'
 export default class Polygon extends BaseLayer {
-  static defaultProps = Object.assign(BaseLayer.defaultProps, {
+  static defaultProps ={
     source: {
       data: null
     },
@@ -18,7 +18,7 @@ export default class Polygon extends BaseLayer {
     style: {
       opacity: 1.0
     }
-  })
+  }
   initLayer() {
     const { scene } = this.context
     if (this.layer) scene.removeLayer(this.layer)

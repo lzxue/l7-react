@@ -48,7 +48,8 @@ export default class CustomControl extends React.PureComponent {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (!isEqual(this.props, nextProps)) {
+    // 排除children 问题
+    if (!isEqual(this.props.option, nextProps.option)) {
       this.ctr.remove()
       this.createControl(nextProps)
     }

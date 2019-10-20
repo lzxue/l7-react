@@ -12,7 +12,9 @@ class LayerEvent extends React.PureComponent {
   }
 
   componentDidMount () {
+    console.log(this.props)
     const {layer} = this.context
+    console.log(layer)
     layer.on(this.props.type, this.props.onChange)
   }
 
