@@ -30,7 +30,8 @@ export default class App extends Component {
       })
       this.setState({
         data: data,
-        labelData: labelData
+        labelData: labelData,
+        textAllowOverlap: true
 
       })
     })
@@ -62,8 +63,13 @@ export default class App extends Component {
     </Popup>
   }
   layerClickHander=(e) => {
+    const { textAllowOverlap } = this.state
+    console.log(textAllowOverlap)
     this.getChildData(e.feature.properties.code)
-    this.setState({ feature: e.feature })
+    this.setState({
+      feature: e.feature,
+      textAllowOverlap: !textAllowOverlap
+    })
   }
   getChildData(code) {
     d3.json(`http://datavmap-public.oss-cn-hangzhou.aliyuncs.com/areas/children/${code}.json`).then(data => {
@@ -133,7 +139,7 @@ export default class App extends Component {
     />
   }
   render() {
-    const { data, labelData, child } = this.state
+    const { data, labelData, textAllowOverlap } = this.state
     return (
       <div>
         <AMapProvider token={'15cd8a57710d40c9b7c0e3cc120f1200'} version={'1.4.15'} plugin={'Map3D'} >
@@ -166,22 +172,10 @@ export default class App extends Component {
               value: ['#9e0142', '#d53e4f', '#f46d43', '#fdae61', '#fee08b', '#ffffbf', '#e6f598', '#abdda4', '#66c2a5', '#3288bd', '#5e4fa2']
             }}
             // eslint-disable-next-line indent
-              shape={{
-              field: 'fill'
-            }}
-            // eslint-disable-next-line indent
               style={{
               opacity: 0.5
-            }}
-            >
-            <LayerEvent
-            type={'mousemove'}
-            onChange={this.showPopup}
-           />
-              <LayerEvent
-                type={'click'}
-                onChange={this.layerClickHander}
-              />
+            }} >
+              <LayerEvent type='mousedown' onChange={this.layerClickHander} />
             </Polygon>
             <Line
               source={{
@@ -246,7 +240,7 @@ export default class App extends Component {
               }}
               style={{
                 opacity: 1.0,
-                textAllowOverlap: true,
+                textAllowOverlap: textAllowOverlap,
                 textAnchor: 'top',
                 textOffset: [0, 40]
               }}

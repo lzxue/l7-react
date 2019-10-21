@@ -70,7 +70,6 @@ class Scene extends Component {
       if (style.background) {
         this.mapWrapper.style.background = style.background
       }
-      console.log()
       window.scene = this.scene
       this.setState({
         mapLoaded: true,

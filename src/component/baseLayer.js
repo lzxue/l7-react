@@ -116,7 +116,11 @@ export default class BaseLayer extends Component {
     !isEqual(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value)
     !isEqual(style, nextStyle) && this.layer.style(nextStyle)
     if (!this.propsEqual(filter, nextfilter)) {
-      this.layer.filter(nextfilter.field, nextfilter.value)
+      if (nextfilter) {
+        this.layer.filter(nextfilter.field, nextfilter.value)
+      } else {
+        this.layer.filter(true)
+      }
     }
     this.layer.render()
   }

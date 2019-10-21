@@ -26684,6 +26684,7 @@ Float32BufferAttribute$1.prototype = Object.create( BufferAttribute.prototype );
 Float32BufferAttribute$1.prototype.constructor = Float32BufferAttribute$1;
 
 var THREE$1 = /*#__PURE__*/Object.freeze({
+__proto__: null,
 Float32BufferAttribute: Float32BufferAttribute$1,
 Scene: Scene,
 WebGLRenderer: WebGLRenderer,
@@ -29440,6 +29441,7 @@ var lib_105 = lib.size;
 var lib_106 = lib.Cache;
 
 var Utils = /*#__PURE__*/Object.freeze({
+__proto__: null,
 'default': index,
 __moduleExports: lib,
 contains: lib_1,
@@ -29550,16 +29552,15 @@ size: lib_105,
 Cache: lib_106
 });
 
-var Util = lib_95({}, Utils, {
-  assign: lib_95, // simple mix
+var Util = Object.assign({}, {assign: lib_95, // simple mix
   merge: lib_86, // deep mix
   cloneDeep: lib_83,
   isFinite: isFinite,
   isNaN: isNaN,
   snapEqual: lib_38,
   remove: lib_10,
-  inArray: lib_1
-});
+  inArray: lib_1},
+  Utils);
 
 Util.Array = {
   groupToMap: lib_27,
@@ -29612,7 +29613,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-var version = "1.3.9";
+var version = "1.3.15";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -34779,7 +34780,7 @@ var RADIUS = 6378137;
 var FLATTENING = 1/298.257223563;
 var POLAR_RADIUS = 6356752.3142;
 
-var _wgs84_0_0_0_wgs84 = {
+var wgs84 = {
 	RADIUS: RADIUS,
 	FLATTENING: FLATTENING,
 	POLAR_RADIUS: POLAR_RADIUS
@@ -34863,7 +34864,7 @@ function ringArea(coords) {
             area += ( rad(p3[0]) - rad(p1[0]) ) * Math.sin( rad(p2[1]));
         }
 
-        area = area * _wgs84_0_0_0_wgs84.RADIUS * _wgs84_0_0_0_wgs84.RADIUS / 2;
+        area = area * wgs84.RADIUS * wgs84.RADIUS / 2;
     }
 
     return area;
@@ -35431,12 +35432,12 @@ var write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-var _ieee754_1_1_13_ieee754 = {
+var ieee754 = {
 	read: read,
 	write: write
 };
 
-var _pbf_3_2_0_pbf = Pbf;
+var pbf = Pbf;
 
 
 
@@ -35454,6 +35455,11 @@ Pbf.Fixed32 = 5; // 32-bit: float, fixed32, sfixed32
 
 var SHIFT_LEFT_32 = (1 << 16) * (1 << 16),
     SHIFT_RIGHT_32 = 1 / SHIFT_LEFT_32;
+
+// Threshold chosen based on both benchmarking and knowledge about browser string
+// data structures (which currently switch structure types at 12 bytes or more)
+var TEXT_DECODER_MIN_LENGTH = 12;
+var utf8TextDecoder = typeof TextDecoder === 'undefined' ? null : new TextDecoder('utf8');
 
 Pbf.prototype = {
 
@@ -35510,13 +35516,13 @@ Pbf.prototype = {
     },
 
     readFloat: function() {
-        var val = _ieee754_1_1_13_ieee754.read(this.buf, this.pos, true, 23, 4);
+        var val = ieee754.read(this.buf, this.pos, true, 23, 4);
         this.pos += 4;
         return val;
     },
 
     readDouble: function() {
-        var val = _ieee754_1_1_13_ieee754.read(this.buf, this.pos, true, 52, 8);
+        var val = ieee754.read(this.buf, this.pos, true, 52, 8);
         this.pos += 8;
         return val;
     },
@@ -35548,10 +35554,16 @@ Pbf.prototype = {
     },
 
     readString: function() {
-        var end = this.readVarint() + this.pos,
-            str = readUtf8(this.buf, this.pos, end);
+        var end = this.readVarint() + this.pos;
+        var pos = this.pos;
         this.pos = end;
-        return str;
+
+        if (end - pos >= TEXT_DECODER_MIN_LENGTH && utf8TextDecoder) {
+            // longer strings are fast with the built-in browser TextDecoder API
+            return readUtf8TextDecoder(this.buf, pos, end);
+        }
+        // short strings are fast with our custom implementation
+        return readUtf8(this.buf, pos, end);
     },
 
     readBytes: function() {
@@ -35732,13 +35744,13 @@ Pbf.prototype = {
 
     writeFloat: function(val) {
         this.realloc(4);
-        _ieee754_1_1_13_ieee754.write(this.buf, val, this.pos, true, 23, 4);
+        ieee754.write(this.buf, val, this.pos, true, 23, 4);
         this.pos += 4;
     },
 
     writeDouble: function(val) {
         this.realloc(8);
-        _ieee754_1_1_13_ieee754.write(this.buf, val, this.pos, true, 52, 8);
+        ieee754.write(this.buf, val, this.pos, true, 52, 8);
         this.pos += 8;
     },
 
@@ -36007,6 +36019,10 @@ function readUtf8(buf, pos, end) {
     }
 
     return str;
+}
+
+function readUtf8TextDecoder(buf, pos, end) {
+    return utf8TextDecoder.decode(buf.subarray(pos, end));
 }
 
 function writeUtf8(buf, str, pos) {
@@ -36677,7 +36693,7 @@ function readTile(tag, layers, pbf) {
 var VectorTile$1 = vectortile;
 
 function mvt(data, cfg) {
-  var tile = new VectorTile$1(new _pbf_3_2_0_pbf(data));
+  var tile = new VectorTile$1(new pbf(data));
   var layerName = cfg.sourceLayer;
   var features = [];
   var vectorLayer = tile.layers[layerName];
@@ -36855,6 +36871,7 @@ function mean(x) {
 }
 
 var statistics = /*#__PURE__*/Object.freeze({
+__proto__: null,
 sum: sum,
 max: max,
 min: min,
@@ -38691,7 +38708,7 @@ function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
 
             // if this didn't work, try curing all small self-intersections locally
             } else if (pass === 1) {
-                ear = cureLocalIntersections(ear, triangles, dim);
+                ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
                 earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
 
             // as a last resort, try splitting the remaining polygon into two
@@ -38798,7 +38815,7 @@ function cureLocalIntersections(start, triangles, dim) {
         p = p.next;
     } while (p !== start);
 
-    return p;
+    return filterPoints(p);
 }
 
 // try splitting polygon into two and triangulate them independently
@@ -38891,7 +38908,7 @@ function findHoleBridge(hole, outerNode) {
 
     if (!m) { return null; }
 
-    if (hx === qx) { return m.prev; } // hole touches outer segment; pick lower endpoint
+    if (hx === qx) { return m; } // hole touches outer segment; pick leftmost endpoint
 
     // look for points inside the triangle of hole point, segment intersection and endpoint;
     // if there are no points found, we have a valid connection;
@@ -38903,24 +38920,30 @@ function findHoleBridge(hole, outerNode) {
         tanMin = Infinity,
         tan;
 
-    p = m.next;
+    p = m;
 
-    while (p !== stop) {
+    do {
         if (hx >= p.x && p.x >= mx && hx !== p.x &&
                 pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
 
             tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
 
-            if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+            if (locallyInside(p, hole) &&
+                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
                 m = p;
                 tanMin = tan;
             }
         }
 
         p = p.next;
-    }
+    } while (p !== stop);
 
     return m;
+}
+
+// whether sector in vertex m contains sector in vertex p in the same coordinates
+function sectorContainsSector(m, p) {
+    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
 }
 
 // interlink polygon nodes in z-order
@@ -39032,8 +39055,10 @@ function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
 
 // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
 function isValidDiagonal(a, b) {
-    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
-           locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
 }
 
 // signed area of a triangle
@@ -39048,10 +39073,28 @@ function equals(p1, p2) {
 
 // check if two segments intersect
 function intersects(p1, q1, p2, q2) {
-    if ((equals(p1, q1) && equals(p2, q2)) ||
-        (equals(p1, q2) && equals(p2, q1))) { return true; }
-    return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
-           area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+    var o1 = sign(area(p1, q1, p2));
+    var o2 = sign(area(p1, q1, q2));
+    var o3 = sign(area(p2, q2, p1));
+    var o4 = sign(area(p2, q2, q1));
+
+    if (o1 !== o2 && o3 !== o4) { return true; } // general case
+
+    if (o1 === 0 && onSegment(p1, p2, q1)) { return true; } // p1, q1 and p2 are collinear and p2 lies on p1q1
+    if (o2 === 0 && onSegment(p1, q2, q1)) { return true; } // p1, q1 and q2 are collinear and q2 lies on p1q1
+    if (o3 === 0 && onSegment(p2, p1, q2)) { return true; } // p2, q2 and p1 are collinear and p1 lies on p2q2
+    if (o4 === 0 && onSegment(p2, q1, q2)) { return true; } // p2, q2 and q1 are collinear and q1 lies on p2q2
+
+    return false;
+}
+
+// for collinear points p, q, r, check if point q lies on segment pr
+function onSegment(p, q, r) {
+    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+}
+
+function sign(num) {
+    return num > 0 ? 1 : num < 0 ? -1 : 0;
 }
 
 // check if a polygon diagonal intersects any polygon segments
@@ -39558,6 +39601,7 @@ function polygonPath(pointCount, start) {
 }
 
 var polygonPath$1 = /*#__PURE__*/Object.freeze({
+__proto__: null,
 circle: circle,
 square: square,
 triangle: triangle,
@@ -40327,7 +40371,7 @@ function limit(out, a, max) {
   return out;
 }
 
-var _glVec2_1_3_0_glVec2 = {
+var glVec2 = {
   EPSILON: epsilon
   , create: create_1
   , clone: clone_1$1
@@ -40373,9 +40417,9 @@ var _glVec2_1_3_0_glVec2 = {
   , forEach: forEach_1
   , limit: limit_1
 };
-var _glVec2_1_3_0_glVec2_2 = _glVec2_1_3_0_glVec2.create;
-var _glVec2_1_3_0_glVec2_5 = _glVec2_1_3_0_glVec2.copy;
-var _glVec2_1_3_0_glVec2_35 = _glVec2_1_3_0_glVec2.dot;
+var glVec2_2 = glVec2.create;
+var glVec2_5 = glVec2.copy;
+var glVec2_35 = glVec2.dot;
 
 /**
  * 对于 polyline-normal 的改进
@@ -40414,7 +40458,7 @@ function getNormals(points, closed, indexOffset) {
   var miter = [ 0, 0 ];
   var _started = false;
   var _normal = null;
-  var tmp = _glVec2_1_3_0_glVec2_2();
+  var tmp = glVec2_2();
   var count = indexOffset || 0;
   var miterLimit = 3;
 
@@ -40479,7 +40523,7 @@ function getNormals(points, closed, indexOffset) {
       var miterLen = computeMiter(tangent, miter, lineA, lineB, 1);
 
       // get orientation
-      var flip = (_glVec2_1_3_0_glVec2_35(tangent, _normal) < 0) ? -1 : 1;
+      var flip = (glVec2_35(tangent, _normal) < 0) ? -1 : 1;
       var bevel = Math.abs(miterLen) > miterLimit;
 
       // 处理前后两条线段重合的情况，这种情况不需要使用任何接头（miter/bevel）。
@@ -40490,7 +40534,7 @@ function getNormals(points, closed, indexOffset) {
         attrIndex.push(index + 1, index + 2, index + 3);
         attrIndex.push(index + 2, index + 4, index + 3);
         normal(tmp, lineB);
-        _glVec2_1_3_0_glVec2_5(_normal, tmp); // store normal for next round
+        glVec2_5(_normal, tmp); // store normal for next round
 
         extrusions(attrPos, out, miters, cur, _normal, 1);
         attrDistance.push(d, d, d, d);
@@ -40512,7 +40556,7 @@ function getNormals(points, closed, indexOffset) {
         attrIndex.push.apply(attrIndex, (flip === 1 ? [ index + 2, index + 4, index + 5 ] : [ index + 4, index + 5, index + 3 ]));
 
         normal(tmp, lineB);
-        _glVec2_1_3_0_glVec2_5(_normal, tmp); // store normal for next round
+        glVec2_5(_normal, tmp); // store normal for next round
 
         extrusions(attrPos, out, miters, cur, _normal, 1);
         attrDistance.push(d, d, d, d);
@@ -40530,7 +40574,7 @@ function getNormals(points, closed, indexOffset) {
         attrIndex.push(index + 2, index + 4, index + 3);
         attrIndex.push(index + 4, index + 5, index + 6);
         normal(tmp, lineB);
-        _glVec2_1_3_0_glVec2_5(_normal, tmp); // store normal for next round
+        glVec2_5(_normal, tmp); // store normal for next round
 
         extrusions(attrPos, out, miters, cur, _normal, 1);
         attrDistance.push(d, d, d, d, d);
@@ -41047,7 +41091,7 @@ exports.NearestFilter = NearestFilter;
 exports.NormalBlending = NormalBlending;
 exports.Object3D = Object3D;
 exports.OrthographicCamera = OrthographicCamera;
-exports.PBF = _pbf_3_2_0_pbf;
+exports.PBF = pbf;
 exports.PerspectiveCamera = PerspectiveCamera;
 exports.PlaneBufferGeometry = PlaneBufferGeometry;
 exports.Points = Points;
@@ -41753,6 +41797,10 @@ Picking.prototype._layerisListened = function _layerisListened (object, type) {
   for (var i = 0; i < layers.length; i++) {
     var layer = layers[i];
     if (object.name === layer.layerId) {
+      if (type === 'mouseup' || type === 'mousedown') {
+        isListened = layer.getListeners(type).length > 0 || layer.getListeners('click').length > 0;
+        break;
+      }
       isListened = layer.getListeners(type).length > 0;
       break;
     }
@@ -42925,6 +42973,7 @@ var Layer = /*@__PURE__*/(function (Base) {
     this.set('scales', {});
     this._mapping();
     if (this.layerData.length === 0) {
+      this.clearDraw();
       return;
     }
     this.redraw();
@@ -43054,11 +43103,16 @@ var Layer = /*@__PURE__*/(function (Base) {
     this.emit('sizeUpdated', this.zoomSizeCache[zoom]);
   };
   Layer.prototype._updateStyle = function _updateStyle (option) {
+
     var newOption = { };
     for (var key in option) {
       newOption['u_' + key] = option[key];
     }
     updateObjecteUniform(this._object3D, newOption);
+    if (option.hasOwnProperty('textAllowOverlap')) {
+      this.repaint();
+      this.scene._engine.update();
+    }
   };
   Layer.prototype._scaleByZoom = function _scaleByZoom () {
     var this$1 = this;
@@ -43116,13 +43170,23 @@ var Layer = /*@__PURE__*/(function (Base) {
   };
 
   // 重新构建mesh
-  Layer.prototype.redraw = function redraw () {
+  Layer.prototype.clearDraw = function clearDraw () {
     var this$1 = this;
 
-    this._object3D.children.forEach(function (child) {
-      this$1._object3D.remove(child);
-    });
+    if (this._object3D.children) {
+      this._object3D.children.forEach(function (child) {
+        this$1._object3D.remove(child);
+      });
+    }
+    if (this._object3D.type === 'composer') {
+      var composerindex = this.scene._engine.composerLayers.indexOf(this._object3D);
+      this.scene._engine.composerLayers.splice(composerindex, 1);
+
+    }
     this.get('pickingController').removeAllMesh();
+  };
+  Layer.prototype.redraw = function redraw () {
+    this.clearDraw();
     this.draw();
   };
   /**
@@ -44426,7 +44490,7 @@ function DrawText(layerData, layer) {
     layer.layerMesh.geometry = geometry;
     layer.layerMesh.geometry.needsUpdate = true;
   };
-  if (!textAllowOverlap) {
+  if (!textAllowOverlap) { // 支持避让
     layer.scene.on('camerachange', updateGeometryHander);
   } else {
     layer.scene.off('camerachange', updateGeometryHander);
@@ -46021,6 +46085,7 @@ function DrawHeatmap(layerdata, layer) {
   var copy = new copyPass(layer);
   copy.renderToScreen = true;
   var composer = new EffectComposer$1(layer.scene._engine._renderer, layer.scene._container);
+  composer.id = layer.layerId;
   composer.addPass(heatmap);
   composer.addPass(copy);
   layer.scene._engine.update();
@@ -47060,6 +47125,7 @@ function __importDefault(mod) {
 }
 
 var tslib_es6 = /*#__PURE__*/Object.freeze({
+__proto__: null,
 __extends: __extends,
 get __assign () { return __assign; },
 __rest: __rest,
@@ -53128,6 +53194,7 @@ var Layers = /*@__PURE__*/(function (Control) {
 
 
 var Control$2 = /*#__PURE__*/Object.freeze({
+__proto__: null,
 Base: Control$1,
 Zoom: Zoom,
 Scale: Scale,
@@ -53135,7 +53202,7 @@ Attribution: Attribution,
 Layers: Layers
 });
 
-var EventNames = [ 'mouseout', 'mouseover', 'mousemove', 'mousedown', 'mouseleave', 'touchstart', 'touchmove', 'touchend', 'mouseup', 'rightclick', 'click', 'dblclick' ];
+var EventNames = [ 'mouseout', 'mouseover', 'mousedown', 'mouseleave', 'touchstart', 'touchmove', 'touchend', 'mouseup', 'rightclick', 'click', 'dblclick' ];
 var Scene$1 = /*@__PURE__*/(function (Base) {
   function Scene(cfg) {
     Base.call(this, cfg);
@@ -53287,15 +53354,18 @@ var Scene$1 = /*@__PURE__*/(function (Base) {
     };
     this._throttleHander = throttle(this._eventHander, 50);
     EventNames.forEach(function (event) {
-      this$1._container.addEventListener(event, this$1._throttleHander, true);
+      this$1._container.addEventListener(event, this$1._eventHander, true);
     });
+    // mousemove 事件截流
+    this._container.addEventListener('mousemove', this._throttleHander, true);
   };
   Scene.prototype._unRegistEvents = function _unRegistEvents () {
     var this$1 = this;
 
     EventNames.forEach(function (event) {
-      this$1._container.removeEventListener(event, this$1._throttleHander, true);
+      this$1._container.removeEventListener(event, this$1._eventHander, true);
     });
+    this._container.removeEventListener('mousemove', this._throttleHander, true);
   };
   Scene.prototype.removeLayer = function removeLayer (layer) {
     var layerIndex = this._layers.indexOf(layer);
@@ -53736,7 +53806,7 @@ return exported;
 return L7;
 
 }));
-//# sourceMappingURL=L7.js.map
+
 });
 
 var L7$1 = unwrapExports(L7);
@@ -54128,7 +54198,7 @@ keysShim$1.shim = function shimObjectKeys() {
 	return Object.keys || keysShim$1;
 };
 
-var objectKeys = keysShim$1;
+var _objectKeys_1_1_1_objectKeys = keysShim$1;
 
 var hasToStringTag = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 var toStr$2 = Object.prototype.toString;
@@ -54158,7 +54228,7 @@ var supportsStandardArguments = (function () {
 
 isStandardArguments.isLegacyArguments = isLegacyArguments; // for tests
 
-var isArguments$1 = supportsStandardArguments ? isStandardArguments : isLegacyArguments;
+var _isArguments_1_0_4_isArguments = supportsStandardArguments ? isStandardArguments : isLegacyArguments;
 
 /* https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.is */
 
@@ -54166,7 +54236,7 @@ var NumberIsNaN = function (value) {
 	return value !== value;
 };
 
-var objectIs = function is(a, b) {
+var _objectIs_1_0_1_objectIs = function is(a, b) {
 	if (a === 0 && b === 0) {
 		return 1 / a === 1 / b;
 	} else if (a === b) {
@@ -54228,9 +54298,9 @@ var implementation$1 = function bind(that) {
     return bound;
 };
 
-var functionBind = Function.prototype.bind || implementation$1;
+var _functionBind_1_1_1_functionBind = Function.prototype.bind || implementation$1;
 
-var src = functionBind.call(Function.call, Object.prototype.hasOwnProperty);
+var src = _functionBind_1_1_1_functionBind.call(Function.call, Object.prototype.hasOwnProperty);
 
 var regexExec = RegExp.prototype.exec;
 var gOPD = Object.getOwnPropertyDescriptor;
@@ -54252,7 +54322,7 @@ var toStr$4 = Object.prototype.toString;
 var regexClass = '[object RegExp]';
 var hasToStringTag$1 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 
-var isRegex = function isRegex(value) {
+var _isRegex_1_0_4_isRegex = function isRegex(value) {
 	if (!value || typeof value !== 'object') {
 		return false;
 	}
@@ -54312,7 +54382,7 @@ var defineProperty$1 = function (object, name, value, predicate) {
 
 var defineProperties = function (object, map) {
 	var predicates = arguments.length > 2 ? arguments[2] : {};
-	var props = objectKeys(map);
+	var props = _objectKeys_1_1_1_objectKeys(map);
 	if (hasSymbols) {
 		props = concat.call(props, Object.getOwnPropertySymbols(map));
 	}
@@ -54323,7 +54393,7 @@ var defineProperties = function (object, map) {
 
 defineProperties.supportsDescriptors = !!supportsDescriptors;
 
-var defineProperties_1 = defineProperties;
+var _defineProperties_1_1_3_defineProperties = defineProperties;
 
 var toObject = Object;
 var TypeErr = TypeError;
@@ -54354,7 +54424,7 @@ var implementation$2 = function flags() {
 	return result;
 };
 
-var supportsDescriptors$1 = defineProperties_1.supportsDescriptors;
+var supportsDescriptors$1 = _defineProperties_1_1_3_defineProperties.supportsDescriptors;
 var gOPD$1 = Object.getOwnPropertyDescriptor;
 var TypeErr$1 = TypeError;
 
@@ -54371,7 +54441,7 @@ var polyfill = function getPolyfill() {
 	return implementation$2;
 };
 
-var supportsDescriptors$2 = defineProperties_1.supportsDescriptors;
+var supportsDescriptors$2 = _defineProperties_1_1_3_defineProperties.supportsDescriptors;
 
 var gOPD$2 = Object.getOwnPropertyDescriptor;
 var defineProperty$2 = Object.defineProperty;
@@ -54398,13 +54468,13 @@ var shim = function shimFlags() {
 
 var flagsBound = Function.call.bind(implementation$2);
 
-defineProperties_1(flagsBound, {
+_defineProperties_1_1_3_defineProperties(flagsBound, {
 	getPolyfill: polyfill,
 	implementation: implementation$2,
 	shim: shim
 });
 
-var regexp_prototype_flags = flagsBound;
+var _regexp_prototype_flags_1_2_0_regexp_prototype_flags = flagsBound;
 
 var getDay = Date.prototype.getDay;
 var tryDateObject = function tryDateObject(value) {
@@ -54420,7 +54490,7 @@ var toStr$6 = Object.prototype.toString;
 var dateClass = '[object Date]';
 var hasToStringTag$2 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 
-var isDateObject = function isDateObject(value) {
+var _isDateObject_1_0_1_isDateObject = function isDateObject(value) {
 	if (typeof value !== 'object' || value === null) { return false; }
 	return hasToStringTag$2 ? tryDateObject(value) : toStr$6.call(value) === dateClass;
 };
@@ -54431,13 +54501,13 @@ function deepEqual(actual, expected, options) {
   var opts = options || {};
 
   // 7.1. All identical values are equivalent, as determined by ===.
-  if (opts.strict ? objectIs(actual, expected) : actual === expected) {
+  if (opts.strict ? _objectIs_1_0_1_objectIs(actual, expected) : actual === expected) {
     return true;
   }
 
   // 7.3. Other pairs that do not both pass typeof value == 'object', equivalence is determined by ==.
   if (!actual || !expected || (typeof actual !== 'object' && typeof expected !== 'object')) {
-    return opts.strict ? objectIs(actual, expected) : actual == expected;
+    return opts.strict ? _objectIs_1_0_1_objectIs(actual, expected) : actual == expected;
   }
 
   /*
@@ -54478,16 +54548,16 @@ function objEquiv(a, b, opts) {
   // an identical 'prototype' property.
   if (a.prototype !== b.prototype) { return false; }
 
-  if (isArguments$1(a) !== isArguments$1(b)) { return false; }
+  if (_isArguments_1_0_4_isArguments(a) !== _isArguments_1_0_4_isArguments(b)) { return false; }
 
-  var aIsRegex = isRegex(a);
-  var bIsRegex = isRegex(b);
+  var aIsRegex = _isRegex_1_0_4_isRegex(a);
+  var bIsRegex = _isRegex_1_0_4_isRegex(b);
   if (aIsRegex !== bIsRegex) { return false; }
   if (aIsRegex || bIsRegex) {
-    return a.source === b.source && regexp_prototype_flags(a) === regexp_prototype_flags(b);
+    return a.source === b.source && _regexp_prototype_flags_1_2_0_regexp_prototype_flags(a) === _regexp_prototype_flags_1_2_0_regexp_prototype_flags(b);
   }
 
-  if (isDateObject(a) && isDateObject(b)) {
+  if (_isDateObject_1_0_1_isDateObject(a) && _isDateObject_1_0_1_isDateObject(b)) {
     return getTime.call(a) === getTime.call(b);
   }
 
@@ -54505,8 +54575,8 @@ function objEquiv(a, b, opts) {
   if (typeof a !== typeof b) { return false; }
 
   try {
-    var ka = objectKeys(a);
-    var kb = objectKeys(b);
+    var ka = _objectKeys_1_1_1_objectKeys(a);
+    var kb = _objectKeys_1_1_1_objectKeys(b);
   } catch (e) { // happens when one is a string literal and the other isn't
     return false;
   }
@@ -54529,7 +54599,7 @@ function objEquiv(a, b, opts) {
   return true;
 }
 
-var deepEqual_1 = deepEqual;
+var _deepEqual_1_1_0_deepEqual = deepEqual;
 
 /* eslint-disable camelcase */
 var Children$1 = React__default.Children;
@@ -54645,18 +54715,22 @@ var BaseLayer = function (_Component) {
       var nextShape = nextProps.shape;
       var nextfilter = nextProps.filter;
       var nextOptions = nextProps.options;
-      if (!deepEqual_1(source, nextSource)) {
+      if (!_deepEqual_1_1_0_deepEqual(source, nextSource)) {
         this.layer.setData(nextSource.data);
       }
-      if (!deepEqual_1(nextOptions, options)) {
+      if (!_deepEqual_1_1_0_deepEqual(nextOptions, options)) {
         this.updateLayerOption(nextOptions, options);
       }
-      !deepEqual_1(color, nextColor) && this.layer.color(nextColor.field, nextColor.value);
-      !deepEqual_1(size, nextSize) && this.layer.size(nextSize.field, nextSize.value);
-      !deepEqual_1(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value);
-      !deepEqual_1(style, nextStyle) && this.layer.style(nextStyle);
+      !_deepEqual_1_1_0_deepEqual(color, nextColor) && this.layer.color(nextColor.field, nextColor.value);
+      !_deepEqual_1_1_0_deepEqual(size, nextSize) && this.layer.size(nextSize.field, nextSize.value);
+      !_deepEqual_1_1_0_deepEqual(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value);
+      !_deepEqual_1_1_0_deepEqual(style, nextStyle) && this.layer.style(nextStyle);
       if (!this.propsEqual(filter, nextfilter)) {
-        this.layer.filter(nextfilter.field, nextfilter.value);
+        if (nextfilter) {
+          this.layer.filter(nextfilter.field, nextfilter.value);
+        } else {
+          this.layer.filter(true);
+        }
       }
       this.layer.render();
     }
@@ -54681,12 +54755,12 @@ var BaseLayer = function (_Component) {
     key: 'propsEqual',
     value: function propsEqual(pre, next) {
       if (!pre || !next) {
-        return deepEqual_1(pre, next);
+        return _deepEqual_1_1_0_deepEqual(pre, next);
       }
       if (!pre.value || !pre.value) {
-        return deepEqual_1(pre, next);
+        return _deepEqual_1_1_0_deepEqual(pre, next);
       }
-      if (deepEqual_1(pre.value.toString(), next.value.toString()) && deepEqual_1(pre.id, next.id)) {
+      if (_deepEqual_1_1_0_deepEqual(pre.value.toString(), next.value.toString()) && _deepEqual_1_1_0_deepEqual(pre.id, next.id)) {
         return true;
       }
       return false;
@@ -54774,7 +54848,7 @@ var Polygon = function (_BaseLayer) {
   return Polygon;
 }(BaseLayer);
 
-Polygon.defaultProps = Object.assign(BaseLayer.defaultProps, {
+Polygon.defaultProps = {
   source: {
     data: null
   },
@@ -54790,7 +54864,7 @@ Polygon.defaultProps = Object.assign(BaseLayer.defaultProps, {
   style: {
     opacity: 1.0
   }
-});
+};
 
 var PolyLine = function (_BaseLayer) {
   inherits(PolyLine, _BaseLayer);
@@ -54933,13 +55007,13 @@ var Popup = function (_Component) {
   }, {
     key: 'UNSAFE_componentWillReceiveProps',
     value: function UNSAFE_componentWillReceiveProps(nextProps) {
-      if (!deepEqual_1(this.props.lnglat, nextProps.lnglat) || !deepEqual_1(this.props.html, nextProps.html) || !deepEqual_1(this.props.text, nextProps.text) || !deepEqual_1(this.props.onClose, nextProps.onClose)) {
+      if (!_deepEqual_1_1_0_deepEqual(this.props.lnglat, nextProps.lnglat) || !_deepEqual_1_1_0_deepEqual(this.props.html, nextProps.html) || !_deepEqual_1_1_0_deepEqual(this.props.text, nextProps.text) || !_deepEqual_1_1_0_deepEqual(this.props.onClose, nextProps.onClose)) {
         this.removePopup();
         this.addPopup(nextProps);
       }
 
       // // Otherwise update the current popup.
-      if (!deepEqual_1(this.props.lnglat, nextProps.lnglat)) {
+      if (!_deepEqual_1_1_0_deepEqual(this.props.lnglat, nextProps.lnglat)) {
         this.popup.setLnglat(nextProps.lnglat);
       }
       if (this.props.children !== nextProps.children) {
@@ -55120,7 +55194,7 @@ var LoadImage = function (_Component) {
     value: function UNSAFE_componentWillReceiveProps(nextProps) {
       var option = nextProps.option;
 
-      if (!deepEqual_1(option, this.props.option)) {
+      if (!_deepEqual_1_1_0_deepEqual(option, this.props.option)) {
         this.context.scene.image.addImage(option.name, option.url);
       }
     }
@@ -55158,7 +55232,7 @@ var Control = function (_React$PureComponent) {
 
       var ctr = Control.controlOption[option.type];
       this.ctr = new L7.Control[ctr.name]({
-        position: ctr.position
+        position: option.position || ctr.position
       }).addTo(scene);
       scene.set(props.type, this.ctr);
     }
@@ -55175,7 +55249,7 @@ var Control = function (_React$PureComponent) {
   }, {
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
-      if (!deepEqual_1(this.props, nextProps)) {
+      if (!_deepEqual_1_1_0_deepEqual(this.props, nextProps)) {
         this.ctr.remove();
         this.createControl(nextProps);
       }
@@ -55266,7 +55340,8 @@ var CustomControl = function (_React$PureComponent) {
   }, {
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
-      if (!deepEqual_1(this.props, nextProps)) {
+      // 排除children 问题
+      if (!_deepEqual_1_1_0_deepEqual(this.props.option, nextProps.option)) {
         this.ctr.remove();
         this.createControl(nextProps);
       }
