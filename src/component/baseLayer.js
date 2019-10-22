@@ -107,6 +107,7 @@ export default class BaseLayer extends Component {
     const nextOptions = nextProps.options
     if (!isEqual(source, nextSource)) {
       this.layer.setData(nextSource.data)
+      nextOptions.autoFit && this.layer.fitBounds()
     }
     if (!isEqual(nextOptions, options)) {
       this.updateLayerOption(nextOptions, options)
@@ -127,6 +128,7 @@ export default class BaseLayer extends Component {
 
   componentWillUnmount() {
     const { scene } = this.context
+    if (this.layer.destroyed) return
     scene.removeLayer(this.layer)
   }
   renderChildren() {

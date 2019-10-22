@@ -29606,7 +29606,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-var version = "1.3.15";
+var version = "1.3.17";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -41613,11 +41613,6 @@ function styleInject(css, ref) {
 var css = ".l7-marker {\n\tposition: absolute !important;\n\ttop: 0;\n\tleft: 0;\n\tz-index: 5;\n}\n.l7-popup-anchor-top,\n.l7-popup-anchor-top-left,\n.l7-popup-anchor-top-right {\n    -webkit-flex-direction: column;\n    flex-direction: column;\n}\n\n.l7-popup-anchor-bottom,\n.l7-popup-anchor-bottom-left,\n.l7-popup-anchor-bottom-right {\n    -webkit-flex-direction: column-reverse;\n    flex-direction: column-reverse;\n}\n\n.l7-popup-anchor-left {\n    -webkit-flex-direction: row;\n    flex-direction: row;\n}\n\n.l7-popup-anchor-right {\n    -webkit-flex-direction: row-reverse;\n    flex-direction: row-reverse;\n}\n.l7-popup {\n  position: absolute;\n  top: 0;\n  left: 0;\n  display: -webkit-flex;\n  display: flex;\n  will-change: transform;\n  pointer-events: none;\n  z-index: 5;\n}\n.l7-popup-tip {\n  width: 0;\n  height: 0;\n  border: 10px solid transparent;\n  z-index: 1;\n}\n.l7-popup-anchor-top .l7-popup-tip {\n\t-webkit-align-self: center;\n\talign-self: center;\n\tborder-top: none;\n\tborder-bottom-color: #fff;\n}\n\n.l7-popup-anchor-top-left .l7-popup-tip {\n\t-webkit-align-self: flex-start;\n\talign-self: flex-start;\n\tborder-top: none;\n\tborder-left: none;\n\tborder-bottom-color: #fff;\n}\n\n.l7-popup-anchor-top-right .l7-popup-tip {\n\t-webkit-align-self: flex-end;\n\talign-self: flex-end;\n\tborder-top: none;\n\tborder-right: none;\n\tborder-bottom-color: #fff;\n}\n\n.l7-popup-anchor-bottom .l7-popup-tip {\n\t-webkit-align-self: center;\n\talign-self: center;\n\tborder-bottom: none;\n\tborder-top-color: #fff;\n}\n\n.l7-popup-anchor-bottom-left .l7-popup-tip {\n\t-webkit-align-self: flex-start;\n\talign-self: flex-start;\n\tborder-bottom: none;\n\tborder-left: none;\n\tborder-top-color: #fff;\n}\n\n.l7-popup-anchor-bottom-right .l7-popup-tip {\n\t-webkit-align-self: flex-end;\n\talign-self: flex-end;\n\tborder-bottom: none;\n\tborder-right: none;\n\tborder-top-color: #fff;\n}\n\n.l7-popup-anchor-left .l7-popup-tip {\n\t-webkit-align-self: center;\n\talign-self: center;\n\tborder-left: none;\n\tborder-right-color: #fff;\n}\n\n.l7-popup-anchor-right .l7-popup-tip {\n\t-webkit-align-self: center;\n\talign-self: center;\n\tborder-right: none;\n\tborder-left-color: #fff;\n}\n\n.l7-popup-close-button {\n\tposition: absolute;\n\tright: 0;\n\ttop: 0;\n\tborder: 0;\n\tpadding: 0;\n\tfont-size: 25px;\n\tline-height: 20px;\n\tborder-radius: 0 3px 0 0;\n\tcursor: pointer;\n\tbackground-color: transparent;\n}\n\n.l7-popup-close-button:hover {\n\tbackground-color: rgba(0, 0, 0, 0.05);\n}\n\n.l7-popup-content {\n\tposition: relative;\n\tbackground: #fff;\n\tborder-radius: 3px;\n\tbox-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);\n\tpadding: 10px 10px 15px;\n\tpointer-events: auto;\n}\n\n.l7-popup-anchor-top-left .l7-popup-content {\n\tborder-top-left-radius: 0;\n}\n\n.l7-popup-anchor-top-right .l7-popup-content {\n\tborder-top-right-radius: 0;\n}\n\n.l7-popup-anchor-bottom-left .l7-popup-content {\n\tborder-bottom-left-radius: 0;\n}\n\n.l7-popup-anchor-bottom-right .l7-popup-content {\n\tborder-bottom-right-radius: 0;\n}\n\n.l7-popup-track-pointer {\n\tdisplay: none;\n}\n\n.l7-popup-track-pointer * {\n\tpointer-events: none;\n\tuser-select: none;\n}\n\n.l7-map:hover .l7-popup-track-pointer {\n\tdisplay: flex;\n}\n\n.l7-map:active .l7-popup-track-pointer {\n\tdisplay: none;\n}\n\n.l7-popup-close-button {\n  position: absolute;\n  right: 0;\n  top: 0;\n  border: 0;\n  border-radius: 0 3px 0 0;\n  cursor: pointer;\n  background-color: transparent;\n}\n\n.l7-popup-close-button:hover {\n  background-color: rgba(0, 0, 0, 0.05);\n}\n\n.l7-popup-content {\n  position: relative;\n  background: #fff;\n  border-radius: 3px;\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);\n  padding: 10px 10px 15px;\n  pointer-events: auto;\n}\n\n/* general toolbar styles */\n\n.l7-bar {\n\tbox-shadow: 0 1px 5px rgba(0,0,0,0.65);\n\tborder-radius: 4px;\n\t}\n.l7-bar a,\n.l7-bar a:hover {\n\tbackground-color: #fff;\n\tborder-bottom: 1px solid #ccc;\n\twidth: 26px;\n\theight: 26px;\n\tline-height: 26px;\n\tdisplay: block;\n\ttext-align: center;\n\ttext-decoration: none;\n\tcolor: black;\n\t}\n.l7-bar a,\n.l7-control-layers-toggle {\n\tbackground-position: 50% 50%;\n\tbackground-repeat: no-repeat;\n\tdisplay: block;\n\t}\n.l7-bar a:hover {\n\tbackground-color: #f4f4f4;\n\t}\n.l7-bar a:first-child {\n\tborder-top-left-radius: 4px;\n\tborder-top-right-radius: 4px;\n\t}\n.l7-bar a:last-child {\n\tborder-bottom-left-radius: 4px;\n\tborder-bottom-right-radius: 4px;\n\tborder-bottom: none;\n\t}\n.l7-bar a.l7-disabled {\n\tcursor: default;\n\tbackground-color: #f4f4f4;\n\tcolor: #bbb;\n\t}\n\n\n/* control positioning */\n\n.l7-control-container {\n\tfont: 12px/1.5 \"Helvetica Neue\", Arial, Helvetica, sans-serif;\n}\n.l7-control-hide {\n\tdisplay: none;\n}\n.l7-control {\n\tposition: relative;\n\tz-index: 800;\n\tpointer-events: visiblePainted; /* IE 9-10 doesn't have auto */\n\tpointer-events: auto;\n\t}\n.l7-top,\n.l7-bottom {\n\tposition: absolute;\n\tz-index: 1000;\n\tpointer-events: none;\n\t}\n.l7-top {\n\ttop: 0;\n\t}\n.l7-right {\n\tright: 0;\n\t}\n.l7-bottom {\n\tbottom: 0;\n\t}\n.l7-left {\n\tleft: 0;\n\t}\n.l7-control {\n\tfloat: left;\n\tclear: both;\n\t}\n.l7-right .l7-control {\n\tfloat: right;\n\t}\n.l7-top .l7-control {\n\tmargin-top: 10px;\n\t}\n.l7-bottom .l7-control {\n\tmargin-bottom: 10px;\n\t}\n.l7-left .l7-control {\n\tmargin-left: 10px;\n\t}\n.l7-right .l7-control {\n\tmargin-right: 10px;\n  }\n  \n  /* attribution and scale controls */\n\n.l7-control-container .l7-control-attribution {\n\tbackground: #fff;\n\tbackground: rgba(255, 255, 255, 0.7);\n\tmargin: 0;\n\t}\n.l7-control-attribution,\n.l7-control-scale-line {\n\tpadding: 0 5px;\n\tcolor: #333;\n\t}\n.l7-control-attribution a {\n\ttext-decoration: none;\n\t}\n.l7-control-attribution a:hover {\n\ttext-decoration: underline;\n\t}\n.l7-container .l7-control-attribution,\n.l7-container .l7-control-scale {\n\tfont-size: 11px;\n\t}\n.l7-left .l7-control-scale {\n\tmargin-left: 5px;\n\t}\n.l7-bottom .l7-control-scale {\n\tmargin-bottom: 5px;\n\t}\n.l7-control-scale-line {\n\tborder: 2px solid #777;\n\tborder-top: none;\n\tline-height: 1.1;\n\tpadding: 2px 5px 1px;\n\tfont-size: 11px;\n\twhite-space: nowrap;\n\toverflow: hidden;\n\t-moz-box-sizing: border-box;\n\t     box-sizing: border-box;\n\n\tbackground: #fff;\n\tbackground: rgba(255, 255, 255, 0.5);\n\t}\n.l7-control-scale-line:not(:first-child) {\n\tborder-top: 2px solid #777;\n\tborder-bottom: none;\n\tmargin-top: -2px;\n\t}\n.l7-control-scale-line:not(:first-child):not(:last-child) {\n\tborder-bottom: 2px solid #777;\n\t}\n\n.l7-touch .l7-control-attribution,\n.l7-touch .l7-control-layers,\n.l7-touch .l7-bar {\n\tbox-shadow: none;\n\t}\n.l7-touch .l7-control-layers,\n.l7-touch .l7-bar {\n\tborder: 2px solid rgba(0,0,0,0.2);\n\tbackground-clip: padding-box;\n\t}\n\n\n\t/* layers control */\n\n.l7-control-layers {\n\tbox-shadow: 0 1px 5px rgba(0,0,0,0.4);\n\tbackground: #fff;\n\tborder-radius: 5px;\n\t}\n.l7-control-layers-toggle {\n\tbackground-image: url(\"data:image/svg+xml,%3C%3Fxml version%3D%221.0%22 standalone%3D%22no%22%3F%3E%3C!DOCTYPE svg PUBLIC %22-%2F%2FW3C%2F%2FDTD SVG 1.1%2F%2FEN%22 %22http%3A%2F%2Fwww.w3.org%2FGraphics%2FSVG%2F1.1%2FDTD%2Fsvg11.dtd%22%3E%3Csvg t%3D%221566292427369%22 class%3D%22icon%22 viewBox%3D%220 0 1024 1024%22 version%3D%221.1%22 xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 p-id%3D%228341%22 width%3D%2232%22 height%3D%2232%22 xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%3E%3Cdefs%3E%3Cstyle type%3D%22text%2Fcss%22%3E%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cpath d%3D%22M256 341.333333l256 128 256-128-256-128-256 128z m276.864-208.384l341.034667 173.909334c20.736 10.581333 28.202667 34.56 16.682666 53.632a41.386667 41.386667 0 0 1-16.64 15.317333l-341.077333 173.909333a46.336 46.336 0 0 1-41.728 0L150.101333 375.808c-20.736-10.581333-28.202667-34.56-16.682666-53.632a41.386667 41.386667 0 0 1 16.64-15.317333l341.077333-173.909334c12.970667-6.613333 28.757333-6.613333 41.728 0z m0 587.349334a45.653333 45.653333 0 0 1-41.728 0l-341.034667-176.938667c-20.736-10.752-28.202667-35.157333-16.682666-54.528a41.642667 41.642667 0 0 1 16.64-15.573333 34.901333 34.901333 0 0 1 32.213333 0l308.906667 160.213333c12.928 6.741333 28.714667 6.741333 41.685333 0l308.864-160.213333a34.901333 34.901333 0 0 1 32.170667 0c20.736 10.752 28.202667 35.157333 16.682666 54.528a41.642667 41.642667 0 0 1-16.64 15.573333l-341.077333 176.938667z m0 170.666666a45.653333 45.653333 0 0 1-41.728 0l-341.034667-176.938666c-20.736-10.752-28.202667-35.157333-16.682666-54.528a41.642667 41.642667 0 0 1 16.64-15.573334 34.901333 34.901333 0 0 1 32.213333 0l308.906667 160.213334c12.928 6.741333 28.714667 6.741333 41.685333 0l308.864-160.213334a34.901333 34.901333 0 0 1 32.170667 0c20.736 10.752 28.202667 35.157333 16.682666 54.528a41.642667 41.642667 0 0 1-16.64 15.573334l-341.077333 176.938666z%22 fill%3D%22%23000000%22 p-id%3D%228342%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E\");\n\twidth: 36px;\n\theight: 36px;\n\t}\n.l7-retina .l7-control-layers-toggle {\n\tbackground-image: url(\"data:image/svg+xml,%3C%3Fxml version%3D%221.0%22 standalone%3D%22no%22%3F%3E%3C!DOCTYPE svg PUBLIC %22-%2F%2FW3C%2F%2FDTD SVG 1.1%2F%2FEN%22 %22http%3A%2F%2Fwww.w3.org%2FGraphics%2FSVG%2F1.1%2FDTD%2Fsvg11.dtd%22%3E%3Csvg t%3D%221566292427369%22 class%3D%22icon%22 viewBox%3D%220 0 1024 1024%22 version%3D%221.1%22 xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 p-id%3D%228341%22 width%3D%2232%22 height%3D%2232%22 xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%3E%3Cdefs%3E%3Cstyle type%3D%22text%2Fcss%22%3E%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cpath d%3D%22M256 341.333333l256 128 256-128-256-128-256 128z m276.864-208.384l341.034667 173.909334c20.736 10.581333 28.202667 34.56 16.682666 53.632a41.386667 41.386667 0 0 1-16.64 15.317333l-341.077333 173.909333a46.336 46.336 0 0 1-41.728 0L150.101333 375.808c-20.736-10.581333-28.202667-34.56-16.682666-53.632a41.386667 41.386667 0 0 1 16.64-15.317333l341.077333-173.909334c12.970667-6.613333 28.757333-6.613333 41.728 0z m0 587.349334a45.653333 45.653333 0 0 1-41.728 0l-341.034667-176.938667c-20.736-10.752-28.202667-35.157333-16.682666-54.528a41.642667 41.642667 0 0 1 16.64-15.573333 34.901333 34.901333 0 0 1 32.213333 0l308.906667 160.213333c12.928 6.741333 28.714667 6.741333 41.685333 0l308.864-160.213333a34.901333 34.901333 0 0 1 32.170667 0c20.736 10.752 28.202667 35.157333 16.682666 54.528a41.642667 41.642667 0 0 1-16.64 15.573333l-341.077333 176.938667z m0 170.666666a45.653333 45.653333 0 0 1-41.728 0l-341.034667-176.938666c-20.736-10.752-28.202667-35.157333-16.682666-54.528a41.642667 41.642667 0 0 1 16.64-15.573334 34.901333 34.901333 0 0 1 32.213333 0l308.906667 160.213334c12.928 6.741333 28.714667 6.741333 41.685333 0l308.864-160.213334a34.901333 34.901333 0 0 1 32.170667 0c20.736 10.752 28.202667 35.157333 16.682666 54.528a41.642667 41.642667 0 0 1-16.64 15.573334l-341.077333 176.938666z%22 fill%3D%22%23000000%22 p-id%3D%228342%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E\");\n\tbackground-size: 26px 26px;\n\t}\n.l7-touch .l7-control-layers-toggle {\n\twidth: 44px;\n\theight: 44px;\n\t}\n.l7-control-layers .l7-control-layers-list,\n.l7-control-layers-expanded .l7-control-layers-toggle {\n\tdisplay: none;\n\t}\n.l7-control-layers-expanded .l7-control-layers-list {\n\tdisplay: block;\n\tposition: relative;\n\t}\n.l7-control-layers-expanded {\n\tpadding: 6px 10px 6px 6px;\n\tcolor: #333;\n\tbackground: #fff;\n\t}\n.l7-control-layers-scrollbar {\n\toverflow-y: scroll;\n\toverflow-x: hidden;\n\tpadding-right: 5px;\n\t}\n.l7-control-layers-selector {\n\tmargin-top: 2px;\n\tposition: relative;\n\ttop: 1px;\n\t}\n.l7-control-layers label {\n\tdisplay: block;\n\t}\n.l7-control-layers-separator {\n\theight: 0;\n\tborder-top: 1px solid #ddd;\n\tmargin: 5px -10px 5px -6px;\n\t}\n\n";
 styleInject(css);
 
-var Scene = (function() {
-  var scene = new actor.Scene();
-  return scene;
-})();
-
 var Camera = function Camera(container) {
   this.container = container;
   var camera = new actor.PerspectiveCamera(45, 1, 1, 2000000);
@@ -41656,14 +41651,6 @@ Renderer.prototype.updateSize = function updateSize () {
   this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
 
 };
-
-// This can be imported from anywhere and will still reference the same scene,
-// though there is a helper reference in Engine.pickingScene
-
-var PickingScene = (function() {
-  var scene = new actor.Scene();
-  return scene;
-})();
 
 function destoryObject(obj) {
   if (!obj) {
@@ -41710,7 +41697,7 @@ var Picking = function Picking(world, renderer, camera) {
   this._world = world;
   this._renderer = renderer;
   this._camera = camera;
-  this._pickingScene = PickingScene;
+  this._pickingScene = new actor.Scene();
   this.world = new actor.Group();
   this._pickingScene.add(this.world);
   var size = this._renderer.getSize();
@@ -41877,7 +41864,7 @@ function Picking$1(world, renderer, camera, scene) {
 var Engine = /*@__PURE__*/(function (EventEmitter) {
   function Engine(container, world) {
     EventEmitter.call(this);
-    this._scene = Scene;
+    this._scene = new actor.Scene();
     this._camera = new Camera(container).camera;
     this._renderer = new Renderer(container).renderer;
     this._world = world;// 地图场景实例
@@ -42985,7 +42972,7 @@ var Layer = /*@__PURE__*/(function (Base) {
     var this$1 = this;
 
     // zoomchange  mapmove resize
-    var EVENT_TYPES = [ 'zoomchange', 'dragend' ];
+    var EVENT_TYPES = [ 'zoomchange', 'dragend', 'camerachange' ];
     actor.Util.each(EVENT_TYPES, function (type) {
       var handler = actor.Util.wrapBehavior(this$1, ("" + type));
       this$1.map.on(("" + type), handler);
@@ -43006,6 +42993,9 @@ var Layer = /*@__PURE__*/(function (Base) {
   };
   Layer.prototype.dragend = function dragend () {
 
+  };
+  Layer.prototype.camerachange = function camerachange (e) {
+    this.emit('camerachange', e);
   };
   Layer.prototype.resize = function resize () {
   };
@@ -43176,6 +43166,10 @@ var Layer = /*@__PURE__*/(function (Base) {
       this.scene._engine.composerLayers.splice(composerindex, 1);
 
     }
+    // 文本清除更新
+    if (this.updateGeometryHander) {
+      this.off('camerachange', this.updateGeometryHander);
+    }
     this.get('pickingController').removeAllMesh();
   };
   Layer.prototype.redraw = function redraw () {
@@ -43224,8 +43218,11 @@ var Layer = /*@__PURE__*/(function (Base) {
         child = null;
       }
     }
-    this.layerMesh.geometry = null;
-    this.layerMesh.material = null;
+    if (this.layerMesh) {
+      this.layerMesh.geometry = null;
+      this.layerMesh.material = null;
+
+    }
     if (this._pickingMesh) {
       this._pickingMesh.children[0].geometry = null;
       this._pickingMesh.children[0].material.dispose();
@@ -44477,16 +44474,16 @@ function DrawText(layerData, layer) {
   var geometry = ref$1.geometry;
   var texture = ref$1.texture;
   var fontAtlas = ref$1.fontAtlas;
-  var updateGeometryHander = function () {
+  layer.updateGeometryHander = function () {
     var ref = _updateGeometry(layerData, layer);
     var geometry = ref.geometry;
     layer.layerMesh.geometry = geometry;
     layer.layerMesh.geometry.needsUpdate = true;
   };
   if (!textAllowOverlap) { // 支持避让
-    layer.scene.on('camerachange', updateGeometryHander);
+    layer.on('camerachange', layer.updateGeometryHander);
   } else {
-    layer.scene.off('camerachange', updateGeometryHander);
+    layer.off('camerachange', layer.updateGeometryHander);
   }
   var material = new TextMaterial({
     name: layer.layerId,
@@ -51362,7 +51359,6 @@ var MAX_CANVAS_WIDTH = 1024;
 var BASELINE_SCALE = 1.0;
 var HEIGHT_SCALE = 1.0;
 var CACHE_LIMIT = 3;
-var cache = new LRUCache(CACHE_LIMIT);
 
 var VALID_PROPS = [
   'fontFamily',
@@ -51389,31 +51385,6 @@ function setTextStyle(ctx, fontFamily, fontSize, fontWeight) {
   ctx.textBaseline = 'middle';
   // ctx.textAlign = 'left';
 }
-function getNewChars(key, characterSet) {
-  var cachedFontAtlas = cache.get(key);
-  if (!cachedFontAtlas) {
-    return characterSet;
-  }
-
-  var newChars = [];
-  var cachedMapping = cachedFontAtlas.mapping;
-  var cachedCharSet = Object.keys(cachedMapping);
-  cachedCharSet = new Set(cachedCharSet);
-
-  var charSet = characterSet;
-  if (charSet instanceof Array) {
-    charSet = new Set(charSet);
-  }
-
-  charSet.forEach(function (char) {
-    if (!cachedCharSet.has(char)) {
-      newChars.push(char);
-    }
-  });
-
-  return newChars;
-}
-
 function populateAlphaChannel(alphaChannel, imageData) {
   // populate distance value from tinySDF to image alpha channel
   for (var i = 0; i < alphaChannel.length; i++) {
@@ -51440,6 +51411,7 @@ var FontAtlasManager = function FontAtlasManager() {
   // key is used for caching generated fontAtlas
   this._key = null;
   this._texture = new actor.Texture();
+  this.cache = new LRUCache(CACHE_LIMIT);
 };
 
 var prototypeAccessors = { texture: { configurable: true },mapping: { configurable: true },scale: { configurable: true },fontAtlas: { configurable: true } };
@@ -51449,7 +51421,7 @@ prototypeAccessors.texture.get = function () {
 };
 
 prototypeAccessors.mapping.get = function () {
-  var data = cache.get(this._key);
+  var data = this.cache.get(this._key);
   return data && data.mapping;
 };
 
@@ -51475,8 +51447,8 @@ FontAtlasManager.prototype.setProps = function setProps (props) {
   var oldKey = this._key;
   this._key = this._getKey();
 
-  var charSet = getNewChars(this._key, this.props.characterSet);
-  var cachedFontAtlas = cache.get(this._key);
+  var charSet = this._getNewChars(this._key, this.props.characterSet);
+  var cachedFontAtlas = this.cache.get(this._key);
 
   // if a fontAtlas associated with the new settings is cached and
   // there are no new chars
@@ -51494,7 +51466,7 @@ FontAtlasManager.prototype.setProps = function setProps (props) {
   this._updateTexture(fontAtlas);
 
   // update cache
-  cache.set(this._key, fontAtlas);
+  this.cache.set(this._key, fontAtlas);
 };
 
 FontAtlasManager.prototype._updateTexture = function _updateTexture (ref) {
@@ -51601,6 +51573,30 @@ FontAtlasManager.prototype._getKey = function _getKey () {
     return (fontFamily + " " + fontWeight + " " + fontSize + " " + buffer + " " + radius + " " + cutoff);
   }
   return (fontFamily + " " + fontWeight + " " + fontSize + " " + buffer);
+};
+FontAtlasManager.prototype._getNewChars = function _getNewChars (key, characterSet) {
+  var cachedFontAtlas = this.cache.get(key);
+  if (!cachedFontAtlas) {
+    return characterSet;
+  }
+
+  var newChars = [];
+  var cachedMapping = cachedFontAtlas.mapping;
+  var cachedCharSet = Object.keys(cachedMapping);
+  cachedCharSet = new Set(cachedCharSet);
+
+  var charSet = characterSet;
+  if (charSet instanceof Array) {
+    charSet = new Set(charSet);
+  }
+
+  charSet.forEach(function (char) {
+    if (!cachedCharSet.has(char)) {
+      newChars.push(char);
+    }
+  });
+
+  return newChars;
 };
 
 Object.defineProperties( FontAtlasManager.prototype, prototypeAccessors );
@@ -53196,7 +53192,7 @@ Layers: Layers
 });
 
 var EventNames = [ 'mouseout', 'mouseover', 'mousedown', 'mouseleave', 'touchstart', 'touchmove', 'touchend', 'mouseup', 'rightclick', 'click', 'dblclick' ];
-var Scene$1 = /*@__PURE__*/(function (Base) {
+var Scene = /*@__PURE__*/(function (Base) {
   function Scene(cfg) {
     Base.call(this, cfg);
     this._initMap();
@@ -53779,7 +53775,7 @@ var Marker = /*@__PURE__*/(function (Base) {
 var version = actor.Global.version;
 var exported = {
   version: version,
-  Scene: Scene$1,
+  Scene: Scene,
   Source: actor.Source,
   TileSource: TileSource,
   registerParser: actor.registerParser,
@@ -53863,7 +53859,6 @@ var Scene = function (_Component) {
         if (style.background) {
           _this2.mapWrapper.style.background = style.background;
         }
-        console.log();
         window.scene = _this2.scene;
         _this2.setState({
           mapLoaded: true,
@@ -54732,6 +54727,7 @@ var BaseLayer = function (_Component) {
     value: function componentWillUnmount() {
       var scene = this.context.scene;
 
+      if (this.layer.destroyed) return;
       scene.removeLayer(this.layer);
     }
   }, {
