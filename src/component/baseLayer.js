@@ -71,8 +71,8 @@ export default class BaseLayer extends Component {
     color && layer.color(color.field, color.value)
     size.field && layer.size(size.field, size.value)
     shape && layer.shape(shape.field, shape.value)
-    active instanceof Boolean && layer.acitve(active)
-    active instanceof Object && layer.acitve(active)
+    active instanceof Boolean && layer.active(active)
+    active instanceof Object && layer.active(active)
     style && layer.style(style)
     this.layer.render()
     if (options.autoFit) {

@@ -54658,8 +54658,8 @@ var BaseLayer = function (_Component) {
       color && layer.color(color.field, color.value);
       size.field && layer.size(size.field, size.value);
       shape && layer.shape(shape.field, shape.value);
-      active instanceof Boolean && layer.acitve(active);
-      active instanceof Object && layer.acitve(active);
+      active instanceof Boolean && layer.active(active);
+      active instanceof Object && layer.active(active);
       style && layer.style(style);
       this.layer.render();
       if (options.autoFit) {
@@ -54705,6 +54705,7 @@ var BaseLayer = function (_Component) {
       var nextOptions = nextProps.options;
       if (!_deepEqual_1_1_0_deepEqual(source, nextSource)) {
         this.layer.setData(nextSource.data);
+        nextOptions.autoFit && this.layer.fitBounds();
       }
       if (!_deepEqual_1_1_0_deepEqual(nextOptions, options)) {
         this.updateLayerOption(nextOptions, options);
