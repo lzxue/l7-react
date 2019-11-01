@@ -146,11 +146,11 @@ class Scene extends Component {
   }
 
   render() {
-    const { style = {}, className } = this.props
+    const { style = {}, className, mapView } = this.props
     return (
       <div>
         <div
-          id='map'
+          id={mapView.id || 'map'}
           style={{
             width: '100%',
             margin: '0',
