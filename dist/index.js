@@ -29613,7 +29613,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-var version = "1.3.17";
+var version = "1.3.20";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -38179,6 +38179,10 @@ var GaodeMap = /*@__PURE__*/(function (Base) {
     scene.getSize = function () {
       return map.getSize();
     };
+    scene.setCenter = function (center) {
+      var lnglat = new AMap.LngLat(center[0], center[1]);
+      return map.setCenter(lnglat);
+    };
     scene.getPitch = function () {
       return map.getPitch();
     };
@@ -42480,7 +42484,7 @@ EventContoller.prototype._init = function _init () {
       }
     }
     // TODO 瓦片图层获取选中数据信息
-    var lnglat = this$1.layer.scene.containerToLngLat(point2d);
+    var lnglat = this$1.layer.scene.containerToLngLat(point2d) || {};
     var feature = null;
     var style = null;
     if (featureId !== -999) {
@@ -42683,8 +42687,7 @@ var Layer = /*@__PURE__*/(function (Base) {
         strokeWidth: 1.0,
         opacity: 1.0,
         strokeOpacity: 1.0,
-        texture: false,
-        blending: 'normal'
+        texture: false
       },
       destroyed: false,
       // 选中时的配置项
@@ -42711,10 +42714,11 @@ var Layer = /*@__PURE__*/(function (Base) {
     }
     this.layerMesh = object;
     this._visibleWithZoom();
+    var startTime = this.scene._engine.clock.getElapsedTime();
     object.onBeforeRender = function () { // 每次渲染前改变状态
       var zoom = this$1.scene.getZoom();
       updateObjecteUniform(this$1._object3D, {
-        u_time: this$1.scene._engine.clock.getElapsedTime(),
+        u_time: this$1.scene._engine.clock.getElapsedTime() - startTime,
         u_zoom: zoom
       });
       this$1.preRender();
@@ -42979,7 +42983,7 @@ var Layer = /*@__PURE__*/(function (Base) {
     var this$1 = this;
 
     // zoomchange  mapmove resize
-    var EVENT_TYPES = [ 'zoomchange', 'dragend', 'camerachange' ];
+    var EVENT_TYPES = [ 'zoomchange', 'dragend', 'camerachange', 'resize' ];
     actor.Util.each(EVENT_TYPES, function (type) {
       var handler = actor.Util.wrapBehavior(this$1, ("" + type));
       this$1.map.on(("" + type), handler);
@@ -43001,12 +43005,12 @@ var Layer = /*@__PURE__*/(function (Base) {
   Layer.prototype.dragend = function dragend () {
 
   };
+  Layer.prototype.resize = function resize () {
+
+  };
   Layer.prototype.camerachange = function camerachange (e) {
     this.emit('camerachange', e);
   };
-  Layer.prototype.resize = function resize () {
-  };
-
   Layer.prototype.setActive = function setActive (id, color) {
     this._activeIds = id;
     if (!color) { color = actor.Global.activeColor; }
@@ -43055,6 +43059,7 @@ var Layer = /*@__PURE__*/(function (Base) {
     ) {
       this.repaint();
     }
+
     if (!actor.Util.isEqual(preStyle, nextStyle)) {
       // 判断新增，修改，删除
       var newStyle = {};
@@ -43102,6 +43107,9 @@ var Layer = /*@__PURE__*/(function (Base) {
     if (option.hasOwnProperty('textAllowOverlap')) {
       this.repaint();
       this.scene._engine.update();
+    }
+    if (option.hasOwnProperty('blending')) {
+      this.layerMesh && this.layerMesh.material.setBending(option.blending);
     }
   };
   Layer.prototype._scaleByZoom = function _scaleByZoom () {
@@ -43178,6 +43186,7 @@ var Layer = /*@__PURE__*/(function (Base) {
       this.off('camerachange', this.updateGeometryHander);
     }
     this.get('pickingController').removeAllMesh();
+    this.scene._engine.update();
   };
   Layer.prototype.redraw = function redraw () {
     this.clearDraw();
@@ -43267,6 +43276,10 @@ var Layer = /*@__PURE__*/(function (Base) {
   // tileLayer
   Layer.prototype.getSourceCache = function getSourceCache (id) {
     return this.scene.style.getSource(id);
+  };
+  Layer.prototype.setHeight = function setHeight (height) {
+    this._object3D.position.z = height;
+    this.scene._engine.update();
   };
 
   return Layer;
@@ -43699,7 +43712,8 @@ function MeshLineMaterial(options, defines) {
     defines: defines,
     vertexShader: vs,
     fragmentShader: fs,
-    transparent: true
+    transparent: true,
+    blending: actor.THREE[Material.blendingEnum[options.blending]]
   });
   return material;
 }
@@ -43817,7 +43831,7 @@ function Draw3DShape(layerData, layer) {
     LIGHTING: true
   });
   material.setDefinesvalue('SHAPE', true);
-  material.setBending(style.blending);
+  material.setBending(style.blending || 'normal');
   var fillMesh = new actor.Mesh(geometry, material);
   return fillMesh;
 }
@@ -44504,14 +44518,6 @@ function DrawText(layerData, layer) {
     u_activeColor: activeOption.fill
   });
   var mesh = new actor.Mesh(geometry, material);
-  // 更新 viewport
-  window.addEventListener('resize', function () {
-    var ref = layer.scene.getSize();
-    var width = ref.width;
-    var height = ref.height;
-    material.uniforms.u_viewport_size.value = [ width, height ];
-    material.uniforms.needsUpdate = true;
-  }, false);
 
   // 关闭视锥裁剪
   mesh.frustumCulled = false;
@@ -44597,7 +44603,6 @@ function _updateGeometry(layerData, layer) {
 }
 
 function DrawLine(layerData, layer, buffer) {
-
   var style = layer.get('styleOptions');
   var animateOptions = layer.get('animateOptions');
   var activeOption = layer.get('activedOptions');
@@ -44614,7 +44619,6 @@ function DrawLine(layerData, layer, buffer) {
   var attributes = buffer.attributes;
   var indexArray = buffer.indexArray;
   var hasPattern = buffer.hasPattern;
-
   var geometry = new actor.BufferGeometry();
   geometry.setIndex(new actor.Uint32BufferAttribute(indexArray, 1));
   geometry.addAttribute('pickingId', new actor.Float32BufferAttribute(attributes.pickingIds, 1));
@@ -44636,7 +44640,7 @@ function DrawLine(layerData, layer, buffer) {
     activeColor: activeOption.fill,
     u_pattern_spacing: style.patternSpacing || 0,
     u_texture: hasPattern ? layer.scene.image.texture : null,
-    blending: style.blending
+    blending: style.blending || 'normal'
   }, {
     SHAPE: false,
     ANIMATE: false,
@@ -44658,7 +44662,6 @@ function DrawLine(layerData, layer, buffer) {
       u_trailLength: trailLength
     });
     lineMaterial.setDefinesvalue('ANIMATE', true);
-    // lineMaterial.setDefinesvalue('DASHLINE', true);
   }
   return lineMesh;
 }
@@ -44689,7 +44692,7 @@ function DrawArcLine(layerData, layer, buffer) {
     u_zoom: layer.scene.getZoom(),
     activeColor: activeOption.fill,
     shapeType: layer.shapeType,
-    blending: style.blending
+    blending: style.blending || 'additive'
   }, {
     SHAPE: false
   });
@@ -44985,7 +44988,7 @@ function DrawImage(layerData, layer) {
     TEXCOORD_0: true
   });
   material.depthTest = false;
-  material.setBending(style.blending);
+  material.setBending(style.blending || 'normal');
   var strokeMesh = new actor.Points(geometry, material);
   return strokeMesh;
 }
@@ -45188,7 +45191,7 @@ function drawCircle(layerData, layer, buffer) {
     u_strokeOpacity: style.strokeOpacity
   });
   material.depthTest = false;
-  material.setBending(style.blending);
+  material.setBending(style.blending || 'normal');
   var fillMesh = new actor.Mesh(geometry, material);
   return fillMesh;
 }
@@ -45708,6 +45711,7 @@ RenderPass.prototype = {
 
 var ShaderPass = function( shader, textureID ) {
 
+
 	this.textureID = ( textureID !== undefined ) ? textureID : "tDiffuse";
 
 	if ( shader instanceof actor.ShaderMaterial ) {
@@ -45741,7 +45745,6 @@ var ShaderPass = function( shader, textureID ) {
 
 	this.camera = new actor.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
 	this.scene = new actor.Scene();
-
 	this.quad = new actor.Mesh( new actor.PlaneBufferGeometry( 2, 2 ), null );
 	this.scene.add( this.quad );
 
@@ -45753,7 +45756,7 @@ ShaderPass.prototype = {
 		if ( this.uniforms[ this.textureID ] ) {
 			this.uniforms[ this.textureID ].value = readBuffer.texture;
 
-		}
+    }
     renderer.autoClear = false;
 		this.quad.material = this.material;
 
@@ -46295,6 +46298,12 @@ var PointLayer = /*@__PURE__*/(function (Layer) {
     });
 
   };
+  PointLayer.prototype.resize = function resize () {
+    Layer.prototype.resize.call(this);
+    if (this.shapeType === 'text') {
+      this.repaint();
+    }
+  };
   PointLayer.prototype._updateData = function _updateData () {
     if (this.layerSource.get('isCluster')) {
       var bounds = this.scene.getBounds().toBounds();
@@ -46341,8 +46350,8 @@ var LineLayer = /*@__PURE__*/(function (Layer) {
       this.animateDuration < this.scene._engine.clock.getElapsedTime()
     ) {
       this.layerMesh.material.setDefinesvalue('ANIMATE', false);
-      this.emit('animateEnd');
       this.scene.stopAnimate();
+      this.emit('animateEnd');
       this.animateDuration = Infinity;
     }
   };
@@ -52592,7 +52601,7 @@ Control.prototype._initControlPos = function _initControlPos () {
   createCorner('bottom', 'left');
   createCorner('bottom', 'right');
 };
-Control.prototype._clearControlPos = function _clearControlPos () {
+Control.prototype.clearControlPos = function clearControlPos () {
   for (var i in this._controlCorners) {
     remove(this._controlCorners[i]);
   }
@@ -53348,7 +53357,7 @@ var Scene = /*@__PURE__*/(function (Base) {
       if (e.target.nodeName !== 'CANVAS') { return; }
       this$1._engine._picking.pickdata(e);
     };
-    this._throttleHander = throttle(this._eventHander, 50);
+    this._throttleHander = throttle(this._eventHander, 30);
     EventNames.forEach(function (event) {
       this$1._container.addEventListener(event, this$1._eventHander, true);
     });
@@ -53418,6 +53427,7 @@ var Scene = /*@__PURE__*/(function (Base) {
     this._engine.update();
   };
   Scene.prototype.destroy = function destroy () {
+    this.get('controlController').clearControlPos();
     Base.prototype.destroy.call(this);
     this._layers.forEach(function (layer) {
       layer.destroy();
@@ -54193,7 +54203,7 @@ keysShim$1.shim = function shimObjectKeys() {
 	return Object.keys || keysShim$1;
 };
 
-var _objectKeys_1_1_1_objectKeys = keysShim$1;
+var objectKeys = keysShim$1;
 
 var hasToStringTag = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 var toStr$2 = Object.prototype.toString;
@@ -54223,7 +54233,7 @@ var supportsStandardArguments = (function () {
 
 isStandardArguments.isLegacyArguments = isLegacyArguments; // for tests
 
-var _isArguments_1_0_4_isArguments = supportsStandardArguments ? isStandardArguments : isLegacyArguments;
+var isArguments$1 = supportsStandardArguments ? isStandardArguments : isLegacyArguments;
 
 /* https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.is */
 
@@ -54231,7 +54241,7 @@ var NumberIsNaN = function (value) {
 	return value !== value;
 };
 
-var _objectIs_1_0_1_objectIs = function is(a, b) {
+var objectIs = function is(a, b) {
 	if (a === 0 && b === 0) {
 		return 1 / a === 1 / b;
 	} else if (a === b) {
@@ -54293,9 +54303,9 @@ var implementation$1 = function bind(that) {
     return bound;
 };
 
-var _functionBind_1_1_1_functionBind = Function.prototype.bind || implementation$1;
+var functionBind = Function.prototype.bind || implementation$1;
 
-var src = _functionBind_1_1_1_functionBind.call(Function.call, Object.prototype.hasOwnProperty);
+var src = functionBind.call(Function.call, Object.prototype.hasOwnProperty);
 
 var regexExec = RegExp.prototype.exec;
 var gOPD = Object.getOwnPropertyDescriptor;
@@ -54317,7 +54327,7 @@ var toStr$4 = Object.prototype.toString;
 var regexClass = '[object RegExp]';
 var hasToStringTag$1 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 
-var _isRegex_1_0_4_isRegex = function isRegex(value) {
+var isRegex = function isRegex(value) {
 	if (!value || typeof value !== 'object') {
 		return false;
 	}
@@ -54377,7 +54387,7 @@ var defineProperty$1 = function (object, name, value, predicate) {
 
 var defineProperties = function (object, map) {
 	var predicates = arguments.length > 2 ? arguments[2] : {};
-	var props = _objectKeys_1_1_1_objectKeys(map);
+	var props = objectKeys(map);
 	if (hasSymbols) {
 		props = concat.call(props, Object.getOwnPropertySymbols(map));
 	}
@@ -54388,7 +54398,7 @@ var defineProperties = function (object, map) {
 
 defineProperties.supportsDescriptors = !!supportsDescriptors;
 
-var _defineProperties_1_1_3_defineProperties = defineProperties;
+var defineProperties_1 = defineProperties;
 
 var toObject = Object;
 var TypeErr = TypeError;
@@ -54419,7 +54429,7 @@ var implementation$2 = function flags() {
 	return result;
 };
 
-var supportsDescriptors$1 = _defineProperties_1_1_3_defineProperties.supportsDescriptors;
+var supportsDescriptors$1 = defineProperties_1.supportsDescriptors;
 var gOPD$1 = Object.getOwnPropertyDescriptor;
 var TypeErr$1 = TypeError;
 
@@ -54436,7 +54446,7 @@ var polyfill = function getPolyfill() {
 	return implementation$2;
 };
 
-var supportsDescriptors$2 = _defineProperties_1_1_3_defineProperties.supportsDescriptors;
+var supportsDescriptors$2 = defineProperties_1.supportsDescriptors;
 
 var gOPD$2 = Object.getOwnPropertyDescriptor;
 var defineProperty$2 = Object.defineProperty;
@@ -54463,13 +54473,13 @@ var shim = function shimFlags() {
 
 var flagsBound = Function.call.bind(implementation$2);
 
-_defineProperties_1_1_3_defineProperties(flagsBound, {
+defineProperties_1(flagsBound, {
 	getPolyfill: polyfill,
 	implementation: implementation$2,
 	shim: shim
 });
 
-var _regexp_prototype_flags_1_2_0_regexp_prototype_flags = flagsBound;
+var regexp_prototype_flags = flagsBound;
 
 var getDay = Date.prototype.getDay;
 var tryDateObject = function tryDateObject(value) {
@@ -54485,7 +54495,7 @@ var toStr$6 = Object.prototype.toString;
 var dateClass = '[object Date]';
 var hasToStringTag$2 = typeof Symbol === 'function' && typeof Symbol.toStringTag === 'symbol';
 
-var _isDateObject_1_0_1_isDateObject = function isDateObject(value) {
+var isDateObject = function isDateObject(value) {
 	if (typeof value !== 'object' || value === null) { return false; }
 	return hasToStringTag$2 ? tryDateObject(value) : toStr$6.call(value) === dateClass;
 };
@@ -54496,13 +54506,13 @@ function deepEqual(actual, expected, options) {
   var opts = options || {};
 
   // 7.1. All identical values are equivalent, as determined by ===.
-  if (opts.strict ? _objectIs_1_0_1_objectIs(actual, expected) : actual === expected) {
+  if (opts.strict ? objectIs(actual, expected) : actual === expected) {
     return true;
   }
 
   // 7.3. Other pairs that do not both pass typeof value == 'object', equivalence is determined by ==.
   if (!actual || !expected || (typeof actual !== 'object' && typeof expected !== 'object')) {
-    return opts.strict ? _objectIs_1_0_1_objectIs(actual, expected) : actual == expected;
+    return opts.strict ? objectIs(actual, expected) : actual == expected;
   }
 
   /*
@@ -54543,16 +54553,16 @@ function objEquiv(a, b, opts) {
   // an identical 'prototype' property.
   if (a.prototype !== b.prototype) { return false; }
 
-  if (_isArguments_1_0_4_isArguments(a) !== _isArguments_1_0_4_isArguments(b)) { return false; }
+  if (isArguments$1(a) !== isArguments$1(b)) { return false; }
 
-  var aIsRegex = _isRegex_1_0_4_isRegex(a);
-  var bIsRegex = _isRegex_1_0_4_isRegex(b);
+  var aIsRegex = isRegex(a);
+  var bIsRegex = isRegex(b);
   if (aIsRegex !== bIsRegex) { return false; }
   if (aIsRegex || bIsRegex) {
-    return a.source === b.source && _regexp_prototype_flags_1_2_0_regexp_prototype_flags(a) === _regexp_prototype_flags_1_2_0_regexp_prototype_flags(b);
+    return a.source === b.source && regexp_prototype_flags(a) === regexp_prototype_flags(b);
   }
 
-  if (_isDateObject_1_0_1_isDateObject(a) && _isDateObject_1_0_1_isDateObject(b)) {
+  if (isDateObject(a) && isDateObject(b)) {
     return getTime.call(a) === getTime.call(b);
   }
 
@@ -54570,8 +54580,8 @@ function objEquiv(a, b, opts) {
   if (typeof a !== typeof b) { return false; }
 
   try {
-    var ka = _objectKeys_1_1_1_objectKeys(a);
-    var kb = _objectKeys_1_1_1_objectKeys(b);
+    var ka = objectKeys(a);
+    var kb = objectKeys(b);
   } catch (e) { // happens when one is a string literal and the other isn't
     return false;
   }
@@ -54594,7 +54604,7 @@ function objEquiv(a, b, opts) {
   return true;
 }
 
-var _deepEqual_1_1_0_deepEqual = deepEqual;
+var deepEqual_1 = deepEqual;
 
 /* eslint-disable camelcase */
 var Children$1 = React__default.Children;
@@ -54710,17 +54720,17 @@ var BaseLayer = function (_Component) {
       var nextShape = nextProps.shape;
       var nextfilter = nextProps.filter;
       var nextOptions = nextProps.options;
-      if (!_deepEqual_1_1_0_deepEqual(source, nextSource)) {
+      if (!deepEqual_1(source, nextSource)) {
         this.layer.setData(nextSource.data);
         nextOptions.autoFit && this.layer.fitBounds();
       }
-      if (!_deepEqual_1_1_0_deepEqual(nextOptions, options)) {
+      if (!deepEqual_1(nextOptions, options)) {
         this.updateLayerOption(nextOptions, options);
       }
-      !_deepEqual_1_1_0_deepEqual(color, nextColor) && this.layer.color(nextColor.field, nextColor.value);
-      !_deepEqual_1_1_0_deepEqual(size, nextSize) && this.layer.size(nextSize.field, nextSize.value);
-      !_deepEqual_1_1_0_deepEqual(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value);
-      !_deepEqual_1_1_0_deepEqual(style, nextStyle) && this.layer.style(nextStyle);
+      !deepEqual_1(color, nextColor) && this.layer.color(nextColor.field, nextColor.value);
+      !deepEqual_1(size, nextSize) && this.layer.size(nextSize.field, nextSize.value);
+      !deepEqual_1(shape, nextShape) && this.layer.shape(nextShape.field, nextShape.value);
+      !deepEqual_1(style, nextStyle) && this.layer.style(nextStyle);
       if (!this.propsEqual(filter, nextfilter)) {
         if (nextfilter) {
           this.layer.filter(nextfilter.field, nextfilter.value);
@@ -54752,12 +54762,12 @@ var BaseLayer = function (_Component) {
     key: 'propsEqual',
     value: function propsEqual(pre, next) {
       if (!pre || !next) {
-        return _deepEqual_1_1_0_deepEqual(pre, next);
+        return deepEqual_1(pre, next);
       }
       if (!pre.value || !pre.value) {
-        return _deepEqual_1_1_0_deepEqual(pre, next);
+        return deepEqual_1(pre, next);
       }
-      if (_deepEqual_1_1_0_deepEqual(pre.value.toString(), next.value.toString()) && _deepEqual_1_1_0_deepEqual(pre.id, next.id)) {
+      if (deepEqual_1(pre.value.toString(), next.value.toString()) && deepEqual_1(pre.id, next.id)) {
         return true;
       }
       return false;
@@ -54793,6 +54803,9 @@ BaseLayer.childContextTypes = {
   layer: PropTypes.object
 };
 BaseLayer.defaultProps = {
+  option: {
+    autoFit: false
+  },
   source: {
     data: null
   },
@@ -55004,13 +55017,13 @@ var Popup = function (_Component) {
   }, {
     key: 'UNSAFE_componentWillReceiveProps',
     value: function UNSAFE_componentWillReceiveProps(nextProps) {
-      if (!_deepEqual_1_1_0_deepEqual(this.props.lnglat, nextProps.lnglat) || !_deepEqual_1_1_0_deepEqual(this.props.html, nextProps.html) || !_deepEqual_1_1_0_deepEqual(this.props.text, nextProps.text) || !_deepEqual_1_1_0_deepEqual(this.props.onClose, nextProps.onClose)) {
+      if (!deepEqual_1(this.props.lnglat, nextProps.lnglat) || !deepEqual_1(this.props.html, nextProps.html) || !deepEqual_1(this.props.text, nextProps.text) || !deepEqual_1(this.props.onClose, nextProps.onClose)) {
         this.removePopup();
         this.addPopup(nextProps);
       }
 
       // // Otherwise update the current popup.
-      if (!_deepEqual_1_1_0_deepEqual(this.props.lnglat, nextProps.lnglat)) {
+      if (!deepEqual_1(this.props.lnglat, nextProps.lnglat)) {
         this.popup.setLnglat(nextProps.lnglat);
       }
       if (this.props.children !== nextProps.children) {
@@ -55191,7 +55204,7 @@ var LoadImage = function (_Component) {
     value: function UNSAFE_componentWillReceiveProps(nextProps) {
       var option = nextProps.option;
 
-      if (!_deepEqual_1_1_0_deepEqual(option, this.props.option)) {
+      if (!deepEqual_1(option, this.props.option)) {
         this.context.scene.image.addImage(option.name, option.url);
       }
     }
@@ -55246,7 +55259,7 @@ var Control = function (_React$PureComponent) {
   }, {
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
-      if (!_deepEqual_1_1_0_deepEqual(this.props, nextProps)) {
+      if (!deepEqual_1(this.props, nextProps)) {
         this.ctr.remove();
         this.createControl(nextProps);
       }
@@ -55338,7 +55351,7 @@ var CustomControl = function (_React$PureComponent) {
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
       // 排除children 问题
-      if (!_deepEqual_1_1_0_deepEqual(this.props.option, nextProps.option)) {
+      if (!deepEqual_1(this.props.option, nextProps.option)) {
         this.ctr.remove();
         this.createControl(nextProps);
       }

@@ -25,6 +25,9 @@ export default class BaseLayer extends Component {
     layer: PropTypes.object
   }
   static defaultProps = {
+    option: {
+      autoFit: false
+    },
     source: {
       data: null
     },
