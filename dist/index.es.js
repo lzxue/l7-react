@@ -29606,7 +29606,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-var version = "1.3.20";
+var version = "1.4.1";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -29705,7 +29705,7 @@ var scripts = {
 };
 var dependencies = {
 	"@antv/geo-coord": "^1.0.8",
-	"@antv/util": "~2.0.1",
+	"@antv/util": "2.0.1",
 	"@mapbox/geojson-rewind": "^0.4.0",
 	"@mapbox/tiny-sdf": "^1.1.0",
 	"@mapbox/vector-tile": "^1.3.1",
@@ -34929,35 +34929,38 @@ function geoJSON(data, cfg) {
   var featureKeys = {};
   data.features = data.features.filter(function (item) {
     return item != null
-          && item.geometry
-          && item.geometry.type
-          && item.geometry.coordinates
-          && Array.isArray(item.geometry.coordinates)
-          && item.geometry.coordinates.length > 0;
+      && item.geometry
+      && item.geometry.type
+      && item.geometry.coordinates
+      && Array.isArray(item.geometry.coordinates)
+      && item.geometry.coordinates.length > 0;
   });
   geojsonRewind(data, true);
   // 数据为空时处理
   var i = 0;
-  meta_10(data, function (currentFeature, featureIndex) { // 多个polygon 拆成一个
 
+  meta_10(data, function (currentFeature, featureIndex) { // 多个polygon 拆成一个
     var coord = invariant_2(currentFeature);
+
     if (coord.length === 0) {
       i++;
       return;
     }
-    var id = featureIndex + 1;
-    if (cfg.idField && currentFeature.properties[cfg.idField]) {
-      var value = currentFeature.properties[cfg.idField];
-      id = djb2hash(value) % 1000019;
-      featureKeys[id] = {
-        index: i++,
-        idField: value
-      };
-    }
-    var dataItem = Object.assign({}, currentFeature.properties,
-      {coordinates: coord,
-      _id: id});
-    resultData.push(dataItem);
+    coord.forEach(function (coor) { // mutipolygon
+      var id = featureIndex + 1;
+      if (cfg.idField && currentFeature.properties[cfg.idField]) {
+        var value = currentFeature.properties[cfg.idField];
+        id = djb2hash(value) % 1000019;
+        featureKeys[id] = {
+          index: i++,
+          idField: value
+        };
+      }
+      var dataItem = Object.assign({}, currentFeature.properties,
+        {coordinates: [ coor ],
+        _id: id});
+      resultData.push(dataItem);
+    });
   });
   return {
     dataArray: resultData,
@@ -38013,9 +38016,9 @@ var BlankTheme = {
 
 var DEG2RAD = Math.PI / 180;
 var GaodeMap = /*@__PURE__*/(function (Base) {
-  function GaodeMap(cfg) {
+  function GaodeMap(container, cfg) {
     Base.call(this, cfg);
-    this.container = document.getElementById(this.get('id'));
+    this.container = container;
     this.initMap();
   }
 
@@ -38049,6 +38052,7 @@ var GaodeMap = /*@__PURE__*/(function (Base) {
   GaodeMap.prototype.initMap = function initMap () {
     var this$1 = this;
 
+    window.forceWebGL = true;
     var mapStyle = this.get('mapStyle');
     if (mapStyle) {
       switch (mapStyle) {
@@ -38072,7 +38076,7 @@ var GaodeMap = /*@__PURE__*/(function (Base) {
       this.container = map.getContainer();
       this.setMapStyle(mapStyle);
       this.addOverLayer();
-      setTimeout(function () { this$1.emit('mapLoad'); }, 50);
+      setTimeout(function () { this$1.emit('mapLoad'); }, 100);
     } else {
       this.map = new AMap.Map(this.container, this._attrs);
       this.map.on('complete', function () {
@@ -38085,12 +38089,14 @@ var GaodeMap = /*@__PURE__*/(function (Base) {
   };
   GaodeMap.prototype.asyncCamera = function asyncCamera (engine) {
     this._engine = engine;
-    this.updateCamera();
     this.map.on('camerachange', this.updateCamera.bind(this));
+    this.updateCamera();
+
   };
   GaodeMap.prototype.updateCamera = function updateCamera () {
     var camera = this._engine._camera;
     var mapCamera = this.map.getCameraState();
+    if (!mapCamera || !mapCamera.fov) { return; }
     var fov = mapCamera.fov;
     var near = mapCamera.near;
     var far = mapCamera.far;
@@ -41870,7 +41876,8 @@ var Engine = /*@__PURE__*/(function (EventEmitter) {
     EventEmitter.call(this);
     this._scene = new actor.Scene();
     this._camera = new Camera(container).camera;
-    this._renderer = new Renderer(container).renderer;
+    this._render = new Renderer(container);
+    this._renderer = this._render.renderer;
     this._world = world;// 地图场景实例
     // for MapBox
     this.world = new actor.Group();
@@ -41889,6 +41896,14 @@ var Engine = /*@__PURE__*/(function (EventEmitter) {
     });
   };
   Engine.prototype.update = function update () {
+    var this$1 = this;
+
+    this.redraw();
+    setTimeout(function () {
+      this$1.redraw();
+    }, 50);
+  };
+  Engine.prototype.redraw = function redraw () {
     this._renderer.clear();
     this._renderer.render(this._scene, this._camera);
     this._initPostProcessing();
@@ -41917,6 +41932,10 @@ var Engine = /*@__PURE__*/(function (EventEmitter) {
   };
   Engine.prototype.stop = function stop () {
     cancelAnimationFrame(this.engineID);
+  };
+  Engine.prototype.resize = function resize () {
+    this._render.updateSize();
+    this.update();
   };
 
   return Engine;
@@ -42999,7 +43018,7 @@ var Layer = /*@__PURE__*/(function (Base) {
 
   };
   Layer.prototype.resize = function resize () {
-
+    this.scene._engine.update();
   };
   Layer.prototype.camerachange = function camerachange (e) {
     this.emit('camerachange', e);
@@ -43271,7 +43290,9 @@ var Layer = /*@__PURE__*/(function (Base) {
     return this.scene.style.getSource(id);
   };
   Layer.prototype.setHeight = function setHeight (height) {
-    this._object3D.position.z = height;
+    this._object3D.children.forEach(function (mesh) {
+      mesh.position.z = height;
+    });
     this.scene._engine.update();
   };
 
@@ -46264,7 +46285,7 @@ var PointLayer = /*@__PURE__*/(function (Layer) {
       }
     }
 
-    // 2D circle 特殊处理
+    // 2D circle 特殊处理t
     if (pointShape$1['2d'].indexOf(shape) !== -1) {
       return 'fill';
     } else if (pointShape$1['3d'].indexOf(shape) !== -1) {
@@ -53250,10 +53271,10 @@ var Scene = /*@__PURE__*/(function (Base) {
   Scene.prototype._initMap = function _initMap () {
     var this$1 = this;
 
-    this.mapContainer = this.get('id');
+    this.mapContainer = this._getSceneContainer();
     this.mapType = this.get('mapType') || 'amap';
     var MapProvider = actor.getMap(this.mapType);
-    var Map = new MapProvider(this._attrs);
+    var Map = new MapProvider(this.mapContainer, this._attrs);
     Map.mixMap(this);
     this._container = Map.container;
     Map.on('mapLoad', function () {
@@ -53273,6 +53294,14 @@ var Scene = /*@__PURE__*/(function (Base) {
       this$1._initContoller();
       this$1.emit('loaded');
     });
+  };
+  Scene.prototype._getSceneContainer = function _getSceneContainer () {
+    var id = this.get('id');
+    if (typeof id === 'string') {
+      return document.getElementById(id);
+    } else if (id instanceof HTMLElement) {
+      return id;
+    }
   };
   Scene.prototype.initLayer = function initLayer () {
     var this$1 = this;
@@ -53397,14 +53426,14 @@ var Scene = /*@__PURE__*/(function (Base) {
     // this.map.on('mousemove', this._updateRender);
     this.map.on('mapmove', this._updateRender);
     this.map.on('camerachange', this._updateRender);
-    window.addEventListener('onresize', this._updateRender);
+    this.map.on('resize', this._updateRender);
   };
 
   Scene.prototype.unRegsterMapEvent = function unRegsterMapEvent () {
     // this.map.off('mousemove', this._updateRender);
     this.map.off('mapmove', this._updateRender);
     this.map.off('camerachange', this._updateRender);
-    window.removeEventListener('onresize', this._updateRender);
+    this.map.off('resize', this._updateRender);
   };
   // control
 
@@ -53963,7 +53992,8 @@ var Scene = function (_Component) {
       var _props = this.props,
           _props$style2 = _props.style,
           style = _props$style2 === undefined ? {} : _props$style2,
-          className = _props.className;
+          className = _props.className,
+          mapView = _props.mapView;
 
       return React.createElement(
         'div',
@@ -53971,7 +54001,7 @@ var Scene = function (_Component) {
         React.createElement(
           'div',
           {
-            id: 'map',
+            id: mapView.id || 'map',
             style: _extends({
               width: '100%',
               margin: '0',
