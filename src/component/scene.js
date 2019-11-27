@@ -53,7 +53,6 @@ class Scene extends Component {
     console.log('L7 version', L7.version)
     const { mapView } = this.props
     this.scene = new L7.Scene({
-      id: 'map',
       mapStyle: 'dark', // 样式URL
       center: [120.19382669582967, 30.258134],
       pitch: 0,
@@ -62,7 +61,9 @@ class Scene extends Component {
       attributionControl: false,
       scaleControl: false,
       zoomControl: false,
+      id: this.mapWrapper,
       ...mapView
+
     })
     this.scene.on('loaded', () => {
       const { style = {} } = this.props

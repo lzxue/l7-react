@@ -1,3 +1,4 @@
+
 import React from 'react'
 import PropTypes from 'prop-types'
 import loadScript from '../util/loadScript'
@@ -27,6 +28,8 @@ class AMapProvider extends React.PureComponent {
   })
 
   componentDidMount() {
+    // eslint-disable-next-line no-undef
+
     this.loadAMap().then(() => {
       this.setState({ loaded: true })
     }).catch((err) => {

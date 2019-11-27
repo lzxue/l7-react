@@ -3,7 +3,9 @@ export default function loadScript (src) {
     try {
       var script = document.createElement('script')
       script.src = src
-      script.onload = resolve
+      script.onload = () => {
+        setTimeout(resolve, 10)
+      }
       script.onerror = reject
       document.head.appendChild(script)
     } catch (err) {
