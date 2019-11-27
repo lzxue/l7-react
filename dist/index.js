@@ -29617,7 +29617,11 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
+<<<<<<< HEAD
 var version = "1.4.3";
+=======
+var version = "1.4.1";
+>>>>>>> b8691988bdef1b3f276abfd3cd219542998c8066
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
