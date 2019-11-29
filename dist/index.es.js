@@ -29610,11 +29610,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-<<<<<<< HEAD
-var version = "1.4.3";
-=======
-var version = "1.4.1";
->>>>>>> b8691988bdef1b3f276abfd3cd219542998c8066
+var version = "1.4.5";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -34946,7 +34942,6 @@ function geoJSON(data, cfg) {
   geojsonRewind(data, true);
   // 数据为空时处理
   var i = 0;
-
   meta_10(data, function (currentFeature, featureIndex) { // 多个polygon 拆成一个
     var coord = invariant_2(currentFeature);
 
@@ -34954,21 +34949,31 @@ function geoJSON(data, cfg) {
       i++;
       return;
     }
-    coord.forEach(function (coor) { // mutipolygon
-      var id = featureIndex + 1;
-      if (cfg.idField && currentFeature.properties[cfg.idField]) {
-        var value = currentFeature.properties[cfg.idField];
-        id = djb2hash(value) % 1000019;
-        featureKeys[id] = {
-          index: i++,
-          idField: value
-        };
-      }
+    var id = featureIndex + 1;
+    if (cfg.idField && currentFeature.properties[cfg.idField]) {
+      var value = currentFeature.properties[cfg.idField];
+      id = djb2hash(value) % 1000019;
+      featureKeys[id] = {
+        index: i++,
+        idField: value
+      };
+    }
+    if (currentFeature.geometry.type === 'MultiPolygon') {
+      coord.forEach(function (coor) { // mutipolygon
+
+        var dataItem = Object.assign({}, currentFeature.properties,
+          {coordinates: [ coor ],
+          _id: id});
+        resultData.push(dataItem);
+      });
+
+    } else {
       var dataItem = Object.assign({}, currentFeature.properties,
-        {coordinates: [ coor ],
+        {coordinates: coord,
         _id: id});
       resultData.push(dataItem);
-    });
+    }
+
   });
   return {
     dataArray: resultData,
@@ -38089,7 +38094,9 @@ var GaodeMap = /*@__PURE__*/(function (Base) {
     } else {
       this.map = new AMap.Map(this.container, this._attrs);
       this.map.on('complete', function () {
-        this$1.setMapStyle(mapStyle);
+        if (mapStyle === 'blank') {
+          this$1.map.setLayers([]);
+        }
         this$1.addOverLayer();
         this$1.emit('mapLoad');
       });
