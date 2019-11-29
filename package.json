@@ -61,7 +61,7 @@
     "dist"
   ],
   "dependencies": {
-    "@antv/l7": "^1.4.2",
+    "@antv/l7": "^1.4.5",
     "d3-fetch": "^1.1.2"
   }
 }
