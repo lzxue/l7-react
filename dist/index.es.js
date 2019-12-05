@@ -54761,8 +54761,7 @@ var BaseLayer = function (_Component) {
       var nextOptions = nextProps.options;
       if (!_deepEqual_1_1_1_deepEqual(source, nextSource)) {
         this.layer.setData(nextSource.data);
-        console.log('wff debug layer fitBounds');
-        nextOptions.autoFit && this.layer.fitBounds([73.66, 3.86, 135.05, 53.55]);
+        nextOptions.autoFit && this.layer.fitBounds();
       }
       if (!_deepEqual_1_1_1_deepEqual(nextOptions, options)) {
         this.updateLayerOption(nextOptions, options);
