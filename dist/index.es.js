@@ -29610,7 +29610,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-var version = "1.4.5";
+var version = "1.4.7";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -34958,7 +34958,7 @@ function geoJSON(data, cfg) {
         idField: value
       };
     }
-    if (currentFeature.geometry.type === 'MultiPolygon') {
+    if (currentFeature.geometry.type === 'Polygon') {
       coord.forEach(function (coor) { // mutipolygon
 
         var dataItem = Object.assign({}, currentFeature.properties,
@@ -38088,7 +38088,9 @@ var GaodeMap = /*@__PURE__*/(function (Base) {
     if (map instanceof AMap.Map) {
       this.map = map;
       this.container = map.getContainer();
-      this.setMapStyle(mapStyle);
+      if (mapStyle) {
+        this.setMapStyle(mapStyle);
+      }
       this.addOverLayer();
       setTimeout(function () { this$1.emit('mapLoad'); }, 100);
     } else {
@@ -42537,9 +42539,14 @@ EventContoller.prototype._init = function _init () {
       this$1._selectedId = featureId;
     }
     if (featureId < 0 && this$1._selectedId != null) {
-      type = 'mouseleave';
-      this$1.layer.emit(type, target);
+      this$1.layer.emit('mouseleave', target);
       this$1._selectedId = null;
+    }
+    if (featureId < 0) {
+      // 没有选中元素
+      this$1.layer.emit('unpick', target);
+      this$1.layer.emit('un' + type, target);
+
     }
     this$1.layer._activeIds = featureId;
 
@@ -53850,7 +53857,7 @@ return exported;
 return L7;
 
 }));
-//# sourceMappingURL=L7.js.map
+
 });
 
 var L7$1 = unwrapExports(L7);
