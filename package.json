@@ -1,6 +1,6 @@
 {
   "name": "l7-react",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "",
   "author": "",
   "license": "MIT",
@@ -61,7 +61,7 @@
     "dist"
   ],
   "dependencies": {
-    "@antv/l7": "^1.4.5",
+    "@antv/l7": "^1.4.7",
     "d3-fetch": "^1.1.2"
   }
 }
