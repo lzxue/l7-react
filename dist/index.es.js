@@ -29610,7 +29610,7 @@ var Base = /*@__PURE__*/(function (EventEmitter) {
 }(EventEmitter));
 
 var name = "@antv/l7";
-var version = "1.4.7";
+var version = "1.4.12";
 var description = "Large-scale WebGL-powered Geospatial Data Visualization";
 var main = "build/L7.js";
 var homepage = "https://github.com/antvis/l7";
@@ -29720,6 +29720,7 @@ var dependencies = {
 	"d3-dsv": "^1.0.10",
 	"d3-hexbin": "^0.2.2",
 	earcut: "^2.1.3",
+	"element-resize-event": "^3.0.3",
 	fecha: "^2.3.3",
 	"geojson-rewind": "^0.3.1",
 	"gl-matrix": "^2.4.1",
@@ -38114,7 +38115,10 @@ var GaodeMap = /*@__PURE__*/(function (Base) {
   GaodeMap.prototype.updateCamera = function updateCamera () {
     var camera = this._engine._camera;
     var mapCamera = this.map.getCameraState();
-    if (!mapCamera || !mapCamera.fov) { return; }
+
+    if (!mapCamera || !mapCamera.fov) {
+      throw new Error('浏览器不支持');
+    }
     var fov = mapCamera.fov;
     var near = mapCamera.near;
     var far = mapCamera.far;
@@ -38151,6 +38155,9 @@ var GaodeMap = /*@__PURE__*/(function (Base) {
   };
   GaodeMap.prototype.addOverLayer = function addOverLayer () {
     this.amapContainer = this.map.getContainer().getElementsByClassName('amap-maps')[0];
+    if (!this.amapContainer) {
+      throw new Error('确保高德地图实例化完成再创建初始化L7 scene');
+    }
     this.renderDom = document.createElement('div');
     this.renderDom.style.cssText +=
       'position: absolute;top: 0;height: 100%;width: 100%;pointer-events: none;';
@@ -41646,7 +41653,6 @@ var Camera = function Camera(container) {
   var camera = new actor.PerspectiveCamera(45, 1, 1, 2000000);
   this.camera = camera;
   this.updateSize();
-  window.addEventListener('resize', this.updateSize.bind(this));
 
 };
 Camera.prototype.updateSize = function updateSize () {
@@ -41659,7 +41665,6 @@ var Renderer = function Renderer(container) {
   this.container = container;
   this.initRender();
   this.updateSize();
-  window.addEventListener('resize', this.updateSize.bind(this), false);
 };
 Renderer.prototype.initRender = function initRender () {
   this.renderer = new actor.WebGLRenderer({
@@ -41750,7 +41755,9 @@ var Picking = function Picking(world, renderer, camera) {
 
 Picking.prototype._initEvents = function _initEvents () {
   this._resizeHandler = this._resizeTexture.bind(this);
-  window.addEventListener('resize', this._resizeHandler, false);
+};
+Picking.prototype.resize = function resize () {
+  this._resizeTexture();
 };
 Picking.prototype.pickdata = function pickdata (event) {
   var point = { x: event.offsetX, y: event.offsetY, type: event.type, _parent: event };
@@ -41893,7 +41900,9 @@ var Engine = /*@__PURE__*/(function (EventEmitter) {
   function Engine(container, world) {
     EventEmitter.call(this);
     this._scene = new actor.Scene();
-    this._camera = new Camera(container).camera;
+    this.camera = new Camera(container);
+    this._camera = this.camera.camera;
+    this.container = container;
     this._render = new Renderer(container);
     this._renderer = this._render.renderer;
     this._world = world;// 地图场景实例
@@ -41952,7 +41961,15 @@ var Engine = /*@__PURE__*/(function (EventEmitter) {
     cancelAnimationFrame(this.engineID);
   };
   Engine.prototype.resize = function resize () {
+    var this$1 = this;
+
     this._render.updateSize();
+    this.camera.updateSize();
+    this._picking.resize();
+    var pixelRatio = window.devicePixelRatio;
+    this.composerLayers.forEach(function (composer) {
+      composer.setSize(this$1.container.clientWidth * pixelRatio, this$1.container.clientHeight * pixelRatio);
+    });
     this.update();
   };
 
@@ -46094,22 +46111,8 @@ EffectComposer.prototype = {
 
 };
 
-function EffectComposer$1(renderer, container) {
+function EffectComposer$1(renderer) {
   var composer = new EffectComposer(renderer);
-
-  var updateSize = function() {
-    // TODO: Re-enable this when perf issues can be solved
-    //
-    // Rendering double the resolution of the screen can be really slow
-    // var pixelRatio = window.devicePixelRatio;
-    var pixelRatio = 1;
-
-    composer.setSize(container.clientWidth * pixelRatio, container.clientHeight * pixelRatio);
-  };
-
-  window.addEventListener('resize', updateSize, false);
-  updateSize();
-
   return composer;
 }
 
@@ -46121,7 +46124,7 @@ function DrawHeatmap(layerdata, layer) {
   var heatmap = new heatmapPass(layerdata, layer);
   var copy = new copyPass(layer);
   copy.renderToScreen = true;
-  var composer = new EffectComposer$1(layer.scene._engine._renderer, layer.scene._container);
+  var composer = new EffectComposer$1(layer.scene._engine._renderer);
   composer.id = layer.layerId;
   composer.addPass(heatmap);
   composer.addPass(copy);
@@ -51672,7 +51675,7 @@ var hexagon_vert = "precision highp float;attribute vec3 miter;attribute vec3 a_
 
 var circle_frag = "uniform float u_blur : 0;uniform float u_opacity : 1;uniform float u_strokeWidth : 1;uniform vec4 u_stroke : [1,1,1,1];uniform float u_strokeOpacity : 1;varying vec4 v_data;varying vec4 v_color;varying float v_radius;\n#pragma include \"sdf_2d\"\nvoid main() {int shape=int(v_data.w);lowp float antialiasblur=v_data.z;float antialiased_blur=-max(u_blur,antialiasblur);float r=v_radius/(v_radius+u_strokeWidth);float outer_df;float inner_df;if (shape==0) {outer_df=sdCircle(v_data.xy,1.0);inner_df=sdCircle(v_data.xy,r);} else if (shape==1) {outer_df=sdEquilateralTriangle(1.1*v_data.xy);inner_df=sdEquilateralTriangle(1.1/r*v_data.xy);} else if (shape==2) {outer_df=sdBox(v_data.xy,vec2(1.));inner_df=sdBox(v_data.xy,vec2(r));} else if (shape==3) {outer_df=sdPentagon(v_data.xy,0.8);inner_df=sdPentagon(v_data.xy,r*0.8);} else if (shape==4) {outer_df=sdHexagon(v_data.xy,0.8);inner_df=sdHexagon(v_data.xy,r*0.8);} else if (shape==5) {outer_df=sdOctogon(v_data.xy,1.0);inner_df=sdOctogon(v_data.xy,r);} else if (shape==6) {outer_df=sdHexagram(v_data.xy,0.52);inner_df=sdHexagram(v_data.xy,r*0.52);} else if (shape==7) {outer_df=sdRhombus(v_data.xy,vec2(1.0));inner_df=sdRhombus(v_data.xy,vec2(r));} else if (shape==8) {outer_df=sdVesica(v_data.xy,1.1,0.8);inner_df=sdVesica(v_data.xy,r*1.1,r*0.8);}float opacity_t=smoothstep(0.0,antialiased_blur,outer_df);float color_t=u_strokeWidth < 0.01 ? 0.0 : smoothstep(antialiased_blur,0.0,inner_df\n);gl_FragColor=opacity_t*mix(v_color*u_opacity,u_stroke*u_strokeOpacity*v_color.a,color_t);\n#pragma include \"pick\"\n}";
 
-var circle_vert = "\nattribute vec4 a_color;attribute float a_size;attribute float a_shape;attribute vec2 miter;uniform float u_zoom : 1;uniform float u_stroke_width : 2;uniform float u_activeId : 0;uniform vec4 u_activeColor : [ 1.0,0,0,1.0 ];varying vec4 v_data;varying vec4 v_color;varying float v_radius;\n#pragma include \"decode\"\nvoid main() {v_color=a_color;vec2 extrude=miter;float radius=a_size;v_radius=radius;float zoom_scale=pow(2.,20.-u_zoom);vec2 offset=miter*(radius+u_stroke_width)*zoom_scale;gl_Position=projectionMatrix*modelViewMatrix*vec4(position.xy+offset,0.0,1.0);float antialiasblur=1.0/(radius+u_stroke_width);v_data=vec4(extrude,antialiasblur,a_shape);if(pickingId==u_activeId) {v_color=u_activeColor;}\n#ifdef PICK\nworldId=id_toPickColor(pickingId);\n#endif\n}";
+var circle_vert = "\nattribute vec4 a_color;attribute float a_size;attribute float a_shape;attribute vec2 miter;uniform float u_zoom : 1.;uniform float u_stroke_width : 2.;uniform float u_activeId : 0.;uniform vec4 u_activeColor : [ 1.0,0,0,1.0 ];varying vec4 v_data;varying vec4 v_color;varying float v_radius;\n#pragma include \"decode\"\nvoid main() {v_color=a_color;vec2 extrude=miter;float radius=a_size;v_radius=radius;float zoom_scale=pow(2.,20.-u_zoom);vec2 offset=miter*(radius+u_stroke_width)*zoom_scale;gl_Position=projectionMatrix*modelViewMatrix*vec4(position.xy+offset,0.0,1.0);float antialiasblur=1.0/(radius+u_stroke_width);v_data=vec4(extrude,antialiasblur,a_shape);if(pickingId==u_activeId) {v_color=u_activeColor;}\n#ifdef PICK\nworldId=id_toPickColor(pickingId);\n#endif\n}";
 
 var point_line_frag = "precision highp float;varying float v_pickingId;varying vec4 v_color;void main() {if(v_pickingId <-0.1) {discard;}\n#ifdef ANIMATE \nif (vTime > 1.0 || vTime < 0.0) {discard;} \n#endif\ngl_FragColor=v_color;\n#pragma include \"pick\"\n}";
 
@@ -51734,7 +51737,7 @@ var lighting = "\nuniform float u_ambient : 1.0;uniform float u_diffuse : 1.0;un
 
 var pick = "#ifdef PICK\nif(worldId.x==0.&&worldId.y==0.&& worldId.z==0.){discard;return;}gl_FragColor=worldId;return;\n#endif";
 
-var sdf_2d = "/***2D signed distance field functions*@see http:*/float ndot(vec2 a,vec2 b ) { return a.x*b.x-a.y*b.y; }float sdCircle(vec2 p,float r) {return length(p)-r;}float sdEquilateralTriangle(vec2 p) {const float k=sqrt(3.0);p.x=abs(p.x)-1.0;p.y=p.y+1.0/k;if( p.x+k*p.y > 0.0 ) p=vec2(p.x-k*p.y,-k*p.x-p.y)/2.0;p.x-=clamp( p.x,-2.0,0.0 );return-length(p)*sign(p.y);}float sdBox(vec2 p,vec2 b) {vec2 d=abs(p)-b;return length(max(d,vec2(0)))+min(max(d.x,d.y),0.0);}float sdPentagon(vec2 p,float r) {const vec3 k=vec3(0.809016994,0.587785252,0.726542528);p.x=abs(p.x);p-=2.0*min(dot(vec2(-k.x,k.y),p),0.0)*vec2(-k.x,k.y);p-=2.0*min(dot(vec2( k.x,k.y),p),0.0)*vec2( k.x,k.y);p-=vec2(clamp(p.x,-r*k.z,r*k.z),r);    \nreturn length(p)*sign(p.y);}float sdHexagon(vec2 p,float r) {const vec3 k=vec3(-0.866025404,0.5,0.577350269);p=abs(p);p-=2.0*min(dot(k.xy,p),0.0)*k.xy;p-=vec2(clamp(p.x,-k.z*r,k.z*r),r);return length(p)*sign(p.y);}float sdOctogon(vec2 p,float r) {const vec3 k=vec3(-0.9238795325,0.3826834323,0.4142135623 );p=abs(p);p-=2.0*min(dot(vec2( k.x,k.y),p),0.0)*vec2( k.x,k.y);p-=2.0*min(dot(vec2(-k.x,k.y),p),0.0)*vec2(-k.x,k.y);p-=vec2(clamp(p.x,-k.z*r,k.z*r),r);return length(p)*sign(p.y);}float sdHexagram(vec2 p,float r) {const vec4 k=vec4(-0.5,0.8660254038,0.5773502692,1.7320508076);p=abs(p);p-=2.0*min(dot(k.xy,p),0.0)*k.xy;p-=2.0*min(dot(k.yx,p),0.0)*k.yx;p-=vec2(clamp(p.x,r*k.z,r*k.w),r);return length(p)*sign(p.y);}float sdRhombus(vec2 p,vec2 b) {vec2 q=abs(p);float h=clamp((-2.0*ndot(q,b)+ndot(b,b))/dot(b,b),-1.0,1.0);float d=length( q-0.5*b*vec2(1.0-h,1.0+h) );return d*sign( q.x*b.y+q.y*b.x-b.x*b.y );}float sdVesica(vec2 p,float r,float d) {p=abs(p);float b=sqrt(r*r-d*d);return ((p.y-b)*d>p.x*b) \n? length(p-vec2(0.0,b)): length(p-vec2(-d,0.0))-r;}";
+var sdf_2d = "/***2D signed distance field functions*@see http:*/float ndot(vec2 a,vec2 b ) { return a.x*b.x-a.y*b.y; }float sdCircle(vec2 p,float r) {return length(p)-r;}float sdEquilateralTriangle(vec2 p) {float k=sqrt(3.0);p.x=abs(p.x)-1.0;p.y=p.y+1.0/k;if( p.x+k*p.y > 0.0 ) p=vec2(p.x-k*p.y,-k*p.x-p.y)/2.0;p.x-=clamp( p.x,-2.0,0.0 );return-length(p)*sign(p.y);}float sdBox(vec2 p,vec2 b) {vec2 d=abs(p)-b;return length(max(d,vec2(0)))+min(max(d.x,d.y),0.0);}float sdPentagon(vec2 p,float r) {const vec3 k=vec3(0.809016994,0.587785252,0.726542528);p.x=abs(p.x);p-=2.0*min(dot(vec2(-k.x,k.y),p),0.0)*vec2(-k.x,k.y);p-=2.0*min(dot(vec2( k.x,k.y),p),0.0)*vec2( k.x,k.y);p-=vec2(clamp(p.x,-r*k.z,r*k.z),r);return length(p)*sign(p.y);}float sdHexagon(vec2 p,float r) {vec3 k=vec3(-0.866025404,0.5,0.577350269);p=abs(p);p-=2.0*min(dot(k.xy,p),0.0)*k.xy;p-=vec2(clamp(p.x,-k.z*r,k.z*r),r);return length(p)*sign(p.y);}float sdOctogon(vec2 p,float r) {vec3 k=vec3(-0.9238795325,0.3826834323,0.4142135623 );p=abs(p);p-=2.0*min(dot(vec2( k.x,k.y),p),0.0)*vec2( k.x,k.y);p-=2.0*min(dot(vec2(-k.x,k.y),p),0.0)*vec2(-k.x,k.y);p-=vec2(clamp(p.x,-k.z*r,k.z*r),r);return length(p)*sign(p.y);}float sdHexagram(vec2 p,float r) {vec4 k=vec4(-0.5,0.8660254038,0.5773502692,1.7320508076);p=abs(p);p-=2.0*min(dot(k.xy,p),0.0)*k.xy;p-=2.0*min(dot(k.yx,p),0.0)*k.yx;p-=vec2(clamp(p.x,r*k.z,r*k.w),r);return length(p)*sign(p.y);}float sdRhombus(vec2 p,vec2 b) {vec2 q=abs(p);float h=clamp((-2.0*ndot(q,b)+ndot(b,b))/dot(b,b),-1.0,1.0);float d=length( q-0.5*b*vec2(1.0-h,1.0+h) );return d*sign( q.x*b.y+q.y*b.x-b.x*b.y );}float sdVesica(vec2 p,float r,float d) {p=abs(p);float b=sqrt(r*r-d*d);return ((p.y-b)*d>p.x*b)? length(p-vec2(0.0,b)): length(p-vec2(-d,0.0))-r;}";
 
 var project = "#define PI 3.1415926535\n#define E 2.718281828459045\nvec2 ProjectFlat(vec2 lnglat){float maxs=85.0511287798;float lat=max(min(maxs,lnglat.y),-maxs);float scale=268435456.;float d=PI/180.;float x=lnglat.x*d;float y=lat*d;y=log(tan((PI/4.)+(y/2.)));float a=.5/PI,b=.5,c=-.5/PI;d=.5;x=scale*(a*x+b)-215440491.;y=scale*(c*y+d)-106744817.;return vec2(x,y);}vec2 unProjectFlat(vec2 px){float a=.5/PI;float b=.5;float c=-.5/PI;float d=.5;float scale=268435456.;float x=((px.x+215440491.)/scale-b)/a;float y=((px.y+106744817.)/scale-d)/c;y=(atan(pow(E,y))-(PI/4.))*2.;d=PI/180.;float lat=y/d;float lng=x/d;return vec2(lng,lat);}";
 
@@ -51766,6 +51769,104 @@ function compileBuiltinModules() {
   registerModule('mask_quard', { vs: mask_quard_vert, fs: mask_quard_frag });
 
 }
+
+function resizeListener(e) {
+  var win = e.target || e.srcElement;
+  if (win.__resizeRAF__) {
+    cancelAnimationFrame(win.__resizeRAF__);
+  }
+  win.__resizeRAF__ = requestAnimationFrame(function () {
+    var trigger = win.__resizeTrigger__;
+    var listeners = trigger &&  trigger.__resizeListeners__;
+    if (listeners) {
+      listeners.forEach(function (fn) {
+        fn.call(trigger, e);
+      });
+    }
+  });
+}
+
+var exports$1 = function exports(element, fn) {
+  var window = this;
+  var document = window.document;
+  var isIE;
+
+  var attachEvent = document.attachEvent;
+  if (typeof navigator !== 'undefined') {
+    isIE = navigator.userAgent.match(/Trident/) ||
+      navigator.userAgent.match(/Edge/);
+  }
+
+  function objectLoad() {
+    this.contentDocument.defaultView.__resizeTrigger__ = this.__resizeElement__;
+    this.contentDocument.defaultView.addEventListener('resize', resizeListener);
+  }
+
+  if (!element.__resizeListeners__) {
+    element.__resizeListeners__ = [];
+    if (attachEvent) {
+      element.__resizeTrigger__ = element;
+      element.attachEvent('onresize', resizeListener);
+    } else {
+      if (getComputedStyle(element).position === 'static') {
+        element.style.position = 'relative';
+      }
+      var obj = (element.__resizeTrigger__ = document.createElement('object'));
+      obj.setAttribute(
+        'style',
+        'position: absolute; top: 0; left: 0; height: 100%; width: 100%; pointer-events: none; z-index: -1; opacity: 0;'
+      );
+      obj.setAttribute('class', 'resize-sensor');
+
+      // prevent <object> from stealing keyboard focus
+      obj.setAttribute('tabindex', '-1');
+
+      obj.__resizeElement__ = element;
+      obj.onload = objectLoad;
+      obj.type = 'text/html';
+      if (isIE) {
+        element.appendChild(obj);
+      }
+      obj.data = 'about:blank';
+      if (!isIE) {
+        element.appendChild(obj);
+      }
+    }
+  }
+  element.__resizeListeners__.push(fn);
+};
+
+var elementResizeEvent = typeof window === 'undefined' ? exports$1 : exports$1.bind(window);
+
+var unbind = function (element, fn) {
+  var attachEvent = document.attachEvent;
+  var listeners = element.__resizeListeners__ || [];
+  if (fn) {
+    var index = listeners.indexOf(fn);
+    if (index !== -1) {
+      listeners.splice(index, 1);
+    }
+  } else {
+    listeners = element.__resizeListeners__ = [];
+  }
+  if (!listeners.length) {
+    if (attachEvent) {
+      element.detachEvent('onresize', resizeListener);
+    } else if (element.__resizeTrigger__) {
+      var contentDocument = element.__resizeTrigger__.contentDocument;
+      var defaultView = contentDocument && contentDocument.defaultView;
+      if (defaultView) {
+        defaultView.removeEventListener('resize', resizeListener);
+        delete defaultView.__resizeTrigger__;
+      }
+      element.__resizeTrigger__ = !element.removeChild(
+        element.__resizeTrigger__
+      );
+    }
+    delete element.__resizeListeners__;
+  }
+};
+elementResizeEvent.unbind = unbind;
 
 function WebWorker() {
   return (new Worker(exported.workerUrl));
@@ -53248,6 +53349,7 @@ var EventNames = [ 'mouseout', 'mouseover', 'mousedown', 'mouseleave', 'touchsta
 var Scene = /*@__PURE__*/(function (Base) {
   function Scene(cfg) {
     Base.call(this, cfg);
+    this.handleWindowResized = this.handleWindowResized.bind(this);
     this._initMap();
     this.crs = crsEpsg3857_1;
     this.fontAtlasManager = new FontAtlasManager();
@@ -53299,7 +53401,12 @@ var Scene = /*@__PURE__*/(function (Base) {
     var MapProvider = actor.getMap(this.mapType);
     var Map = new MapProvider(this.mapContainer, this._attrs);
     Map.mixMap(this);
+    this.mapContainer = Map.container;
     this._container = Map.container;
+    elementResizeEvent(
+      this._container,
+      this.handleWindowResized
+    );
     Map.on('mapLoad', function () {
       this$1.map = Map.map;
       this$1._markerContainier = Map.l7_marker_Container;
@@ -53477,6 +53584,7 @@ var Scene = /*@__PURE__*/(function (Base) {
     this._layers.forEach(function (layer) {
       layer.destroy();
     });
+    unbind(this._container, this.handleWindowResized);
     this._layers.length = 0;
     this.image = null;
     this.fontAtlasManager = null;
@@ -53487,8 +53595,12 @@ var Scene = /*@__PURE__*/(function (Base) {
     this.map.destroy();
     this.unRegsterMapEvent();
     this._unRegistEvents();
-
-
+  };
+  Scene.prototype.handleWindowResized = function handleWindowResized () {
+    this.emit('resize');
+    if (this._engine) {
+      this._engine.resize();
+    }
   };
 
   return Scene;
@@ -53544,6 +53656,7 @@ var Popup = /*@__PURE__*/(function (Base) {
     this.lngLat = lngLat;
     if (this._scene) {
       this._scene.on('camerachange', this._update);
+      this._scene.on('resize', this._update);
     }
     this._update(lngLat);
     return this;
@@ -53648,6 +53761,7 @@ var Popup = /*@__PURE__*/(function (Base) {
     }
     if (this._scene) {
       this._scene.off('camerachange', this._update);
+      this._scene.off('resize', this._update);
       this._scene.off('click', this._onClickClose);
       delete this._scene;
     }
@@ -53718,6 +53832,7 @@ var Marker = /*@__PURE__*/(function (Base) {
     this._scene = scene;
     this._scene.getMarkerContainer().appendChild(this.get('element'));
     this._scene.on('camerachange', this._update);
+    this._scene.on('resize', this._update);
     this.setDraggable(this.get('draggable'));
     this._update();
     return this;
@@ -53726,6 +53841,8 @@ var Marker = /*@__PURE__*/(function (Base) {
   Marker.prototype.remove = function remove$1 () {
     if (this._scene) {
       this._scene.off('click', this._onMapClick);
+      this._scene.off('resize', this._update);
+      this._scene.off('camerachange', this._update);
       this._scene.off('move', this._update);
       this._scene.off('moveend', this._update);
       this._scene.off('mousedown', this._addDragHandler);
