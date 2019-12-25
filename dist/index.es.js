@@ -4,12 +4,15 @@ import ReactDOM from 'react-dom';
 
 function loadScript(src) {
   return new Promise(function (resolve, reject) {
+    // 避免重复加载
+    if (window.AMap) {
+      return resolve();
+    }
+
     try {
       var script = document.createElement('script');
       script.src = src;
-      script.onload = function () {
-        setTimeout(resolve, 10);
-      };
+      script.onload = resolve;
       script.onerror = reject;
       document.head.appendChild(script);
     } catch (err) {
