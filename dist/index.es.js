@@ -6,13 +6,15 @@ function loadScript(src) {
   return new Promise(function (resolve, reject) {
     // 避免重复加载
     if (window.AMap) {
-      return resolve();
+      resolve();
     }
 
     try {
       var script = document.createElement('script');
       script.src = src;
-      script.onload = resolve;
+      script.onload = function () {
+        setTimeout(resolve, 10);
+      };
       script.onerror = reject;
       document.head.appendChild(script);
     } catch (err) {
@@ -53977,7 +53979,7 @@ return exported;
 return L7;
 
 }));
-
+//# sourceMappingURL=L7.js.map
 });
 
 var L7$1 = unwrapExports(L7);
