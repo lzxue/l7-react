@@ -11,12 +11,6 @@ var ReactDOM = _interopDefault(require('react-dom'));
 
 function loadScript(src) {
   return new Promise(function (resolve, reject) {
-    // 避免重复加载
-    if (window.AMap) {
-      console.log('AMap已存在，返回成功');
-      resolve();
-    }
-
     try {
       var script = document.createElement('script');
       script.src = src;
@@ -53989,7 +53983,7 @@ return exported;
 return L7;
 
 }));
-//# sourceMappingURL=L7.js.map
+
 });
 
 var L7$1 = unwrapExports(L7);
