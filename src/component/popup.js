@@ -3,7 +3,7 @@ import { Component } from 'react'
 import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 import isEqual from 'deep-equal'
-import L7 from '@antv/l7'
+import { Popup as L7Popup } from '@antv/l7'
 
 export default class Popup extends Component {
   static contextTypes = {
@@ -19,7 +19,7 @@ export default class Popup extends Component {
   }
   addPopup(props) {
     const { option = {}, lnglat, html, text } = props
-    this.popup = new L7.Popup(option)
+    this.popup = new L7Popup(option)
     this.popup.addTo(this.context.scene)
     if (lnglat) {
       this.popup.setLnglat(lnglat)

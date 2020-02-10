@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import L7 from '@antv/l7'
+import { Scene as L7Scene, Control, version } from '@antv/l7'
 
 const Children = React.Children
 class Scene extends Component {
@@ -50,9 +50,9 @@ class Scene extends Component {
   })
 
   createInstance() {
-    console.log('L7 version', L7.version)
+    // console.log('L7 version', L7.version)
     const { mapView } = this.props
-    this.scene = new L7.Scene({
+    this.scene = new L7Scene({
       mapStyle: 'dark', // 样式URL
       center: [120.19382669582967, 30.258134],
       pitch: 0,
@@ -132,7 +132,7 @@ class Scene extends Component {
       }
       if (isShow && !scene.get(control)) { // 需要添加组件
         const option = Scene.controlOption[control]
-        const ctr = new L7.Control[option.name]({
+        const ctr = new Control[option.name]({
           position: option.position
         }).addTo(scene)
         scene.set(control, ctr)
